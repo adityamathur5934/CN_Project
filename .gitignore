@@ -1,0 +1,14 @@
+# Runtime files
+*.log
+*.pid
+backend_b.log
+backend_b.pid
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# OS files
+.DS_Store
+Thumbs.db
