@@ -5,6 +5,7 @@ Listens on 0.0.0.0:3001, serves GET / and GET /api/status.
 No third-party dependencies — stdlib only.
 """
 
+import hashlib
 import json
 import socket
 import sys
@@ -13,9 +14,11 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 PORT = 3001
 HOST = "0.0.0.0"
 
-# Fixed ETag for /api/status (body never changes, so a constant is fine)
+# STATUS_BODY never changes — ETag is a hash of the body so it is:
+#   1. Identical across Backend A and Backend B (same content → same ETag)
+#   2. Self-updating if the body ever changes (no manual constant to forget)
 STATUS_BODY = json.dumps({"backend": "A", "status": "ok"}).encode()
-STATUS_ETAG = '"backend-a-v1"'
+STATUS_ETAG = '"' + hashlib.md5(STATUS_BODY).hexdigest()[:16] + '"'
 
 
 class BackendAHandler(BaseHTTPRequestHandler):
@@ -33,23 +36,29 @@ class BackendAHandler(BaseHTTPRequestHandler):
     def _send_common_headers(self, status: int):
         self.send_response(status)
         self.send_header("X-Backend", "A")
-        self.send_header("Cache-Control", "max-age=60")
+        # Only cache successful responses — errors (4xx/5xx) must not be
+        # cached, otherwise clients won't see new routes or fixed errors.
+        if status < 400:
+            self.send_header("Cache-Control", "max-age=60")
+        else:
+            self.send_header("Cache-Control", "no-store")
 
     # ------------------------------------------------------------------ #
-    #  GET /                                                               #
+    #  GET / HEAD /                                                        #
     # ------------------------------------------------------------------ #
-    def _handle_root(self):
+    def _handle_root(self, send_body: bool = True):
         body = b"Backend A is running\n"
         self._send_common_headers(200)
         self.send_header("Content-Type", "text/plain")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
-        self.wfile.write(body)
+        if send_body:
+            self.wfile.write(body)
 
     # ------------------------------------------------------------------ #
-    #  GET /api/status                                                     #
+    #  GET / HEAD /api/status                                              #
     # ------------------------------------------------------------------ #
-    def _handle_status(self):
+    def _handle_status(self, send_body: bool = True):
         # Conditional request support (ETag / If-None-Match)
         if_none_match = self.headers.get("If-None-Match", "")
         if if_none_match and if_none_match == STATUS_ETAG:
@@ -63,23 +72,32 @@ class BackendAHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(STATUS_BODY)))
         self.send_header("ETag", STATUS_ETAG)
         self.end_headers()
-        self.wfile.write(STATUS_BODY)
+        if send_body:
+            self.wfile.write(STATUS_BODY)
 
     # ------------------------------------------------------------------ #
     #  Router                                                              #
     # ------------------------------------------------------------------ #
-    def do_GET(self):  # noqa: N802
+    def _dispatch(self, send_body: bool):
         if self.path == "/":
-            self._handle_root()
+            self._handle_root(send_body)
         elif self.path == "/api/status":
-            self._handle_status()
+            self._handle_status(send_body)
         else:
             body = b"Not Found\n"
             self._send_common_headers(404)
             self.send_header("Content-Type", "text/plain")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
-            self.wfile.write(body)
+            if send_body:
+                self.wfile.write(body)
+
+    def do_GET(self):   # noqa: N802
+        self._dispatch(send_body=True)
+
+    def do_HEAD(self):  # noqa: N802
+        """HEAD — same headers as GET, no body (required by RFC 7231)."""
+        self._dispatch(send_body=False)
 
 
 def get_lan_ip() -> str:
