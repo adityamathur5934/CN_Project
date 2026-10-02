@@ -1,0 +1,10 @@
+* Added app.team1.test:443:10.7.17.151 to DNS cache
+* Hostname app.team1.test was found in DNS cache
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0*   Trying 10.7.17.151:443...
+* connect to 10.7.17.151 port 443 from 10.7.17.151 port 61286 failed: Connection refused
+* Failed to connect to app.team1.test port 443 after 0 ms: Couldn't connect to server
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+* Closing connection
+curl: (7) Failed to connect to app.team1.test port 443 after 0 ms: Couldn't connect to server

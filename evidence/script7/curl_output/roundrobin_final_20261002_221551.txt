@@ -1,0 +1,12 @@
+Round-Robin Load Balancer Evidence
+Date: Fri Oct  2 22:15:51 IST 2026
+URL: https://app.team1.test:8443/api/status
+---
+Request 1 | X-Backend: A | Response: {"backend": "A", "status": "ok"}
+Request 2 | X-Backend: B | Response: {"backend": "B", "status": "ok"}
+Request 3 | X-Backend: A | Response: {"backend": "A", "status": "ok"}
+Request 4 | X-Backend: B | Response: {"backend": "B", "status": "ok"}
+Request 5 | X-Backend: A | Response: {"backend": "A", "status": "ok"}
+Request 6 | X-Backend: B | Response: {"backend": "B", "status": "ok"}
+Request 7 | X-Backend: A | Response: {"backend": "A", "status": "ok"}
+Request 8 | X-Backend: B | Response: {"backend": "B", "status": "ok"}

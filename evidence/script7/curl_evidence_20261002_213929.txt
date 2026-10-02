@@ -1,0 +1,75 @@
+Script 7 — curl Evidence Collection
+Generated : Fri Oct  2 21:39:29 IST 2026
+Domain    : https://app.team1.test
+nginx IP  : 10.7.17.151
+============================================================
+
+### SECTION 1: DNS Resolution
+Command: dig app.team1.test @10.7.15.236
+
+
+; <<>> DiG 9.10.6 <<>> app.team1.test @10.7.15.236 +noall +answer +comments
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 60227
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; ANSWER SECTION:
+app.team1.test.		0	IN	A	10.7.17.151
+
+
+Command: nslookup app.team1.test 10.7.15.236
+Server:		10.7.15.236
+Address:	10.7.15.236#53
+
+Name:	app.team1.test
+Address: 10.7.17.151
+
+
+### SECTION 2: TLS Handshake Details (verbose curl)
+Command: curl -v https://app.team1.test/ (first request)
+
+* Added app.team1.test:443:10.7.17.151 to DNS cache
+* Hostname app.team1.test was found in DNS cache
+*   Trying 10.7.17.151:443...
+* connect to 10.7.17.151 port 443 from 10.7.17.151 port 61210 failed: Connection refused
+* Failed to connect to app.team1.test port 443 after 0 ms: Couldn't connect to server
+* Closing connection
+
+### SECTION 3: Load Balancer Round-Robin (6 requests)
+Command: curl -sI https://app.team1.test/api/status (x6)
+
+--- Request 1 ---
+--- Request 2 ---
+--- Request 3 ---
+--- Request 4 ---
+--- Request 5 ---
+--- Request 6 ---
+
+### SECTION 4: Full Response Headers
+
+--- Hit 1 (Backend A expected) ---
+
+--- Hit 2 (Backend B expected) ---
+
+### SECTION 5: Response Body
+
+--- Hit 1 body ---
+
+--- Hit 2 body ---
+
+### SECTION 6: TLS Certificate Details
+Command: openssl s_client -connect app.team1.test:443
+
+
+### SECTION 7: IP and Port Summary
+
+Component         | IP              | Port
+------------------|-----------------|-----
+DNS Server (Mac1) | 10.7.15.236     | 53/UDP
+nginx Edge (Mac2) | 10.7.17.151     | 443/TCP
+Backend A  (Mac3) | 10.7.10.0       | 3001/TCP
+Backend B  (Mac4) | 10.7.16.36      | 3002/TCP
+

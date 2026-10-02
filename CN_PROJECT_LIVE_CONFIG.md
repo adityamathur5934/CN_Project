@@ -39,7 +39,8 @@
 - Interface: `en0`
 - Gateway: `10.7.0.1`
 - Reverse proxy: `nginx`
-- HTTPS port: `443/TCP`
+- HTTP port: `8080/TCP` (redirects to HTTPS)
+- HTTPS port: `8443/TCP` (TLS termination — brew nginx runs unprivileged)
 
 ### Mac 3 — Krishiv
 
@@ -79,11 +80,12 @@ api.team1.test → `10.7.17.151`
 
 Public entry point:
 
-`https://app.team1.test`
+`https://app.team1.test:8443`
 
 Listen:
 
-`443`
+`8080` (HTTP → redirect to HTTPS)
+`8443` (HTTPS/TLS)
 
 Backend A:
 
