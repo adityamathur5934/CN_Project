@@ -45,7 +45,7 @@
 ### Mac 3 — Krishiv
 
 - Role: Backend A
-- IPv4: `10.7.10.0`
+- IPv4: `10.7.16.201`
 - Interface: `en0`
 - Gateway: `10.7.0.1`
 - HTTP port: `3001`
@@ -89,7 +89,7 @@ Listen:
 
 Backend A:
 
-`10.7.10.0:3001`
+`10.7.16.201:3001`
 
 Backend B:
 
@@ -105,7 +105,7 @@ Round-robin
 
 Host:
 
-`10.7.10.0`
+`10.7.16.201`
 
 Port:
 

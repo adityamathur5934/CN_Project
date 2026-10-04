@@ -119,7 +119,7 @@ curl -si http://10.7.16.36:3002/api/status
 
 ```nginx
 upstream backend_nodes {
-    server 10.7.10.0:3001;   # Backend A (Mac 3)
+    server 10.7.16.201:3001;   # Backend A (Mac 3)
     server 10.7.16.36:3002;  # Backend B (Mac 4)
 }
 ```
