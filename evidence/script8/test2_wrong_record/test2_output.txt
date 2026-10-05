@@ -1,0 +1,6 @@
+* Added app.team1.test:8443:10.7.17.99 to DNS cache
+* Hostname app.team1.test was found in DNS cache
+*   Trying 10.7.17.99:8443...
+* ipv4 connect timeout after 5000ms, move on!
+* Failed to connect to app.team1.test port 8443 after 5001 ms: Timeout was reached
+* Closing connection
