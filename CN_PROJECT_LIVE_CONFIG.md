@@ -45,7 +45,7 @@
 ### Mac 3 — Krishiv
 
 - Role: Backend A
-- IPv4: `10.7.10.0`
+- IPv4: `10.7.16.201`
 - Interface: `en0`
 - Gateway: `10.7.0.1`
 - HTTP port: `3001`
@@ -53,7 +53,7 @@
 ### Mac 4 — Vaidehi
 
 - Role: Backend B + Client
-- IPv4: `10.7.16.36`
+- IPv4: `10.7.2.96`
 - Interface: `en0`
 - Gateway: `10.7.0.1`
 - HTTP port: `3002`
@@ -89,11 +89,11 @@ Listen:
 
 Backend A:
 
-`10.7.10.0:3001`
+`10.7.16.201:3001`
 
 Backend B:
 
-`10.7.16.36:3002`
+`10.7.2.96:3002`
 
 Load balancing:
 
@@ -105,7 +105,7 @@ Round-robin
 
 Host:
 
-`10.7.10.0`
+`10.7.16.201`
 
 Port:
 
@@ -126,7 +126,7 @@ X-Backend: A
 
 Host:
 
-`10.7.16.36`
+`10.7.2.96`
 
 Port:
 

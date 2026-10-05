@@ -58,7 +58,7 @@ When a client requests a resource for the first time (or after the cache entry h
 ### Test 1: Direct Backend B — Fresh Request (HTTP 200)
 **Command:**
 ```bash
-curl -s -D - "http://10.7.16.36:3002/api/status"
+curl -s -D - "http://10.7.2.96:3002/api/status"
 ```
 **Output:**
 ```http
@@ -79,7 +79,7 @@ ETag: "backend-b-v1"
 ### Test 2: Direct Backend B — Conditional Request (HTTP 304)
 **Command:**
 ```bash
-curl -s -D - -H 'If-None-Match: "backend-b-v1"' "http://10.7.16.36:3002/api/status"
+curl -s -D - -H 'If-None-Match: "backend-b-v1"' "http://10.7.2.96:3002/api/status"
 ```
 **Output:**
 ```http
@@ -138,7 +138,7 @@ Command: `./scripts/test_caching.sh`
 ```
 ═══════════════════════════════════════════════════════════
   Script 6 — HTTP Caching & Revalidation Verification     
-  Backend B: 10.7.16.36:3002  |  Edge: https://app.team1.test:8443 
+  Backend B: 10.7.2.96:3002  |  Edge: https://app.team1.test:8443 
 ═══════════════════════════════════════════════════════════
 
 [1/4] Direct Backend B — Fresh Request (HTTP 200)

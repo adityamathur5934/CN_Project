@@ -10,7 +10,7 @@ python3 server.py
 
 Expected startup output:
 ```
-[Backend A] Listening on 0.0.0.0:3001  (LAN IP: 10.7.10.0:3001)
+[Backend A] Listening on 0.0.0.0:3001  (LAN IP: 10.7.16.201:3001)
 [Backend A] Endpoints:  GET /   GET /api/status
 [Backend A] Press Ctrl-C to stop.
 ```
@@ -47,7 +47,7 @@ ETag: "backend-a-v1"
 
 ### Conditional GET /api/status (304)
 ```bash
-curl -si -H 'If-None-Match: "backend-a-v1"' http://10.7.10.0:3001/api/status
+curl -si -H 'If-None-Match: "backend-a-v1"' http://10.7.16.201:3001/api/status
 # → 304 Not Modified (empty body)
 ```
 
@@ -56,20 +56,20 @@ curl -si -H 'If-None-Match: "backend-a-v1"' http://10.7.10.0:3001/api/status
 ```bash
 curl -si http://127.0.0.1:3001/
 curl -si http://127.0.0.1:3001/api/status
-curl -si http://10.7.10.0:3001/api/status
+curl -si http://10.7.16.201:3001/api/status
 ```
 
 ## Remote Verification (run from Mac 2 / P2)
 
 ```bash
-curl -si http://10.7.10.0:3001/api/status
+curl -si http://10.7.16.201:3001/api/status
 ```
 Expected: HTTP 200, `X-Backend: A`, `{"backend": "A", "status": "ok"}`
 
 ## Handoff to P2 (nginx upstream)
 
 ```
-upstream backend_a:  10.7.10.0:3001
+upstream backend_a:  10.7.16.201:3001
 ```
 
 ## Implementation Notes

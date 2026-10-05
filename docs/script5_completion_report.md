@@ -46,8 +46,8 @@ Signature:  sha256WithRSAEncryption
 
 ```nginx
 upstream backend_nodes {
-    server 10.7.10.0:3001;    # Backend A — Mac 3 (Krishiv)
-    server 10.7.16.36:3002;   # Backend B — Mac 4 (Vaidehi)
+    server 10.7.16.201:3001;    # Backend A — Mac 3 (Krishiv)
+    server 10.7.2.96:3002;   # Backend B — Mac 4 (Vaidehi)
 }
 
 # HTTP — redirects to HTTPS

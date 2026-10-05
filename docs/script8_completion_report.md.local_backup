@@ -1,0 +1,407 @@
+# Script 8 — Phase 1 Failure Tests
+## Completion Report
+
+**Project:** CN_Project — Private Network Service Platform
+**Machine:** Mac 2 — Aditya (Edge / nginx / TLS / Load Balancer)
+**Date:** [FILL: date of tests]
+
+---
+
+## Network Addresses (Live Config)
+
+| Role | Machine | IP | Port |
+|------|---------|-----|------|
+| DNS Server | Mac 1 — Om | 10.7.15.236 | 53/UDP |
+| Edge / nginx | Mac 2 — Aditya | 10.7.17.151 | 8443/TCP |
+| Backend A | Mac 3 — Krishiv | 10.7.10.0 | 3001/TCP |
+| Backend B | Mac 4 — Vaidehi | 10.7.16.36 | 3002/TCP |
+
+---
+
+## Diagnostic Order
+
+All failures analysed in this order:
+```
+DNS → TCP → TLS → Application
+```
+
+The layer where the failure is first observed determines the root cause.
+
+---
+
+## Baseline (Pre-Test System State)
+
+All of the following must be confirmed healthy before tests begin:
+
+| Check | Command | Expected |
+|-------|---------|----------|
+| DNS resolves | `nslookup app.team1.test` | `10.7.17.151` |
+| nginx listening | `sudo lsof -iTCP:8443 -sTCP:LISTEN` | nginx process |
+| Backend A up | `curl http://10.7.10.0:3001/api/status` | HTTP 200, X-Backend: A |
+| Backend B up | `curl http://10.7.16.36:3002/api/status` | HTTP 200, X-Backend: B |
+| Full path works | `curl -sk --resolve app.team1.test:8443:10.7.17.151 https://app.team1.test:8443/api/status` | `{"backend":"A/B","status":"ok"}` |
+
+**Baseline confirmed:** [ ] Yes / [ ] No
+**Notes:** [FILL]
+
+---
+
+## TEST 1 — Wrong DNS Server
+
+| Field | Value |
+|-------|-------|
+| **Fault type** | DNS misconfiguration |
+| **Layer** | DNS (Layer 7 — Name Resolution) |
+| **Who acts** | Mac 2 (Aditya) |
+| **Fault** | DNS resolver changed from `10.7.15.236` to `10.7.99.99` |
+| **Reversible** | Yes — one command to restore |
+
+### Initial State
+- DNS server: `10.7.15.236` (Om / dnsmasq)
+- `nslookup app.team1.test` → `10.7.17.151` ✅
+
+### Fault Injection
+```zsh
+sudo networksetup -setdnsservers Wi-Fi 10.7.99.99
+sudo dscacheutil -flushcache && sudo killall -HUP mDNSResponder
+```
+
+### Test Command
+```zsh
+curl -v --cacert configs/tls/team1.test.crt https://app.team1.test:8443/api/status
+```
+
+### Observed Output
+```
+[FILL from evidence/script8/test1_wrong_dns/test1_output.txt]
+```
+
+### Expected Output
+```
+* Could not resolve host: app.team1.test
+curl: (6) Could not resolve host: app.team1.test
+```
+
+### Layer Analysis
+| Layer | Status | Observation |
+|-------|--------|-------------|
+| DNS | ❌ FAILED | Query sent to 10.7.99.99 — no response / timeout |
+| TCP | ✖ Never reached | No IP to connect to |
+| TLS | ✖ Never reached | — |
+| Application | ✖ Never reached | — |
+
+### Cause
+The DNS resolver at `10.7.99.99` does not exist on this LAN. The query times out with no response. Without resolving `app.team1.test` to an IP, curl cannot form a TCP connection — all subsequent layers are unreachable.
+
+### Restore
+```zsh
+sudo networksetup -setdnsservers Wi-Fi 10.7.15.236
+sudo dscacheutil -flushcache && sudo killall -HUP mDNSResponder
+```
+
+**Restored:** [ ] Confirmed — `nslookup app.team1.test` returns `10.7.17.151`
+
+**Evidence file:** `evidence/script8/test1_wrong_dns/test1_output.txt`
+
+---
+
+## TEST 2 — Wrong DNS Record
+
+| Field | Value |
+|-------|-------|
+| **Fault type** | DNS wrong A record |
+| **Layer** | DNS causes TCP failure |
+| **Who acts** | Mac 1 — Om (edits dnsmasq.conf) |
+| **Fault** | A record changed from `10.7.17.151` to `10.7.99.99` |
+| **Reversible** | Yes — Om reverts dnsmasq.conf |
+
+### Initial State
+- dnsmasq A record: `app.team1.test → 10.7.17.151`
+
+### Fault Injection (Mac 1 — Om)
+Edit `/opt/homebrew/etc/dnsmasq.conf`:
+```
+# Change:  address=/app.team1.test/10.7.17.151
+# To:      address=/app.team1.test/10.7.99.99
+```
+Then: `sudo brew services restart dnsmasq`
+
+Mac 2 flush: `sudo dscacheutil -flushcache && sudo killall -HUP mDNSResponder`
+
+### Test Command (Mac 2)
+```zsh
+curl -v --cacert configs/tls/team1.test.crt https://app.team1.test:8443/api/status
+```
+
+### Observed Output
+```
+[FILL from evidence/script8/test2_wrong_record/test2_output.txt]
+```
+
+### Expected Output
+```
+* Trying 10.7.99.99:8443...
+* connect to 10.7.99.99 port 8443 failed: Operation timed out
+curl: (28) Failed to connect to app.team1.test port 8443 after ...ms
+```
+
+### Layer Analysis
+| Layer | Status | Observation |
+|-------|--------|-------------|
+| DNS | ⚠ Responded | Returned wrong IP: `10.7.99.99` |
+| TCP | ❌ FAILED | SYN sent to `10.7.99.99:8443` — no SYN-ACK, timeout |
+| TLS | ✖ Never reached | — |
+| Application | ✖ Never reached | — |
+
+### Cause
+DNS resolved successfully but returned the wrong IP. The TCP SYN is sent to `10.7.99.99` which has no host responding on this LAN. The connection times out waiting for SYN-ACK. The DNS layer did its job — but with incorrect data.
+
+### Restore (Mac 1 — Om)
+Revert dnsmasq.conf back to `address=/app.team1.test/10.7.17.151`, restart dnsmasq.
+Mac 2: `sudo dscacheutil -flushcache && sudo killall -HUP mDNSResponder`
+
+**Restored:** [ ] Confirmed — `nslookup app.team1.test` returns `10.7.17.151`
+
+**Evidence file:** `evidence/script8/test2_wrong_record/test2_output.txt`
+
+---
+
+## TEST 3 — Stop Backend A
+
+| Field | Value |
+|-------|-------|
+| **Fault type** | Backend failure |
+| **Layer** | Application (nginx upstream) |
+| **Who acts** | Mac 3 — Krishiv stops Backend A |
+| **Fault** | Backend A process stopped on 10.7.10.0:3001 |
+| **Reversible** | Yes — Krishiv restarts the process |
+
+### Initial State
+- Backend A: HTTP 200, X-Backend: A ✅
+- Backend B: HTTP 200, X-Backend: B ✅
+- Round-robin: A, B, A, B
+
+### Fault Injection
+Mac 3 (Krishiv) stops Backend A server process.
+
+### Test Command (Mac 2)
+```zsh
+for i in {1..4}; do
+  curl -s --max-time 5 --cacert configs/tls/team1.test.crt \
+    --resolve app.team1.test:8443:10.7.17.151 \
+    https://app.team1.test:8443/api/status
+  echo ""
+done
+```
+
+### Observed Output
+```
+[FILL from evidence/script8/test3_stop_backend_a/test3_*.txt]
+```
+
+### Expected Output
+```
+{"backend": "B", "status": "ok"}
+{"backend": "B", "status": "ok"}
+{"backend": "B", "status": "ok"}
+{"backend": "B", "status": "ok"}
+```
+All requests go to B only. nginx detects A is unreachable and stops sending to it.
+
+### Layer Analysis
+| Layer | Status | Observation |
+|-------|--------|-------------|
+| DNS | ✅ OK | Resolves correctly |
+| TCP (client→nginx) | ✅ OK | nginx accepts connection |
+| TLS | ✅ OK | Handshake completes |
+| Application (nginx→A) | ❌ FAILED | Connection refused on 10.7.10.0:3001 |
+| Application (nginx→B) | ✅ OK | nginx fails over to B |
+
+### Cause
+nginx uses round-robin with passive health checking. When Backend A refuses connections, nginx marks it as failed and routes all traffic to Backend B. The client sees no error — the failover is transparent.
+
+### Restore
+Krishiv restarts Backend A. nginx automatically re-adds it to rotation.
+
+**Restored:** [ ] Confirmed — round-robin A/B resumes
+
+**Evidence file:** `evidence/script8/test3_stop_backend_a/test3_*.txt`
+
+---
+
+## TEST 4 — Stop Backend B
+
+| Field | Value |
+|-------|-------|
+| **Fault type** | Backend failure |
+| **Layer** | Application (nginx upstream) |
+| **Who acts** | Mac 4 — Vaidehi stops Backend B |
+| **Fault** | Backend B process stopped on 10.7.16.36:3002 |
+| **Reversible** | Yes — Vaidehi restarts the process |
+
+### Observed Output
+```
+[FILL from evidence/script8/test4_stop_backend_b/test4_*.txt]
+```
+
+### Expected Output
+```
+{"backend": "A", "status": "ok"}
+{"backend": "A", "status": "ok"}
+{"backend": "A", "status": "ok"}
+{"backend": "A", "status": "ok"}
+```
+All requests go to A only.
+
+### Layer Analysis
+| Layer | Status | Observation |
+|-------|--------|-------------|
+| DNS | ✅ OK | Resolves correctly |
+| TCP (client→nginx) | ✅ OK | nginx accepts connection |
+| TLS | ✅ OK | Handshake completes |
+| Application (nginx→B) | ❌ FAILED | Connection refused on 10.7.16.36:3002 |
+| Application (nginx→A) | ✅ OK | nginx fails over to A |
+
+### Cause
+Mirror of Test 3. nginx marks Backend B as failed, routes all traffic to Backend A transparently.
+
+### Restore
+Vaidehi restarts Backend B.
+
+**Restored:** [ ] Confirmed — round-robin A/B resumes
+
+**Evidence file:** `evidence/script8/test4_stop_backend_b/test4_*.txt`
+
+---
+
+## TEST 5 — Stop Both Backends
+
+| Field | Value |
+|-------|-------|
+| **Fault type** | Total backend failure |
+| **Layer** | Application (nginx — no upstream available) |
+| **Who acts** | Mac 3 (Krishiv) + Mac 4 (Vaidehi) both stop backends |
+| **Fault** | Both 10.7.10.0:3001 and 10.7.16.36:3002 stopped |
+| **Reversible** | Yes — both restart their processes |
+
+### Observed Output
+```
+[FILL from evidence/script8/test5_stop_both/test5_*.txt]
+```
+
+### Expected Output
+```
+HTTP/1.1 502 Bad Gateway
+<html>
+<head><title>502 Bad Gateway</title></head>
+...
+```
+
+### Layer Analysis
+| Layer | Status | Observation |
+|-------|--------|-------------|
+| DNS | ✅ OK | Resolves correctly |
+| TCP (client→nginx) | ✅ OK | nginx accepts connection |
+| TLS | ✅ OK | Handshake completes |
+| Application (nginx→A) | ❌ FAILED | Connection refused |
+| Application (nginx→B) | ❌ FAILED | Connection refused |
+| nginx response | ❌ 502 | No upstream available |
+
+### Cause
+nginx has no healthy upstreams. It cannot proxy the request to any backend, so it returns `502 Bad Gateway` to the client. The TLS connection to nginx succeeds — the failure is purely at the application/upstream layer. The edge itself is still running.
+
+### Restore
+Both Krishiv and Vaidehi restart their backends.
+
+**Restored:** [ ] Confirmed — round-robin A/B resumes, HTTP 200 returns
+
+**Evidence file:** `evidence/script8/test5_stop_both/test5_*.txt`
+
+---
+
+## TEST 6 — Wrong Destination Port
+
+| Field | Value |
+|-------|-------|
+| **Fault type** | TCP connection to wrong port |
+| **Layer** | TCP |
+| **Who acts** | Mac 2 (Aditya) — curl flag only |
+| **Fault** | curl targets port 9999 instead of 8443 |
+| **Reversible** | Yes — nothing changed, just a wrong curl flag |
+
+### Initial State
+- nginx listening on 8443 ✅
+- Nothing listening on 9999
+
+### Test Command
+```zsh
+curl -v --cacert configs/tls/team1.test.crt \
+  --resolve app.team1.test:9999:10.7.17.151 \
+  https://app.team1.test:9999/api/status 2>&1 | tee evidence/script8/test6_wrong_port/test6_output.txt
+```
+
+### Observed Output
+```
+[FILL from evidence/script8/test6_wrong_port/test6_output.txt]
+```
+
+### Expected Output
+```
+* Trying 10.7.17.151:9999...
+* connect to 10.7.17.151 port 9999 failed: Connection refused
+curl: (7) Failed to connect to app.team1.test port 9999 after 0 ms
+```
+
+### Layer Analysis
+| Layer | Status | Observation |
+|-------|--------|-------------|
+| DNS | ✅ OK | Resolved (via --resolve flag) |
+| TCP | ❌ FAILED | SYN to port 9999 → immediate RST (Connection refused) |
+| TLS | ✖ Never reached | — |
+| Application | ✖ Never reached | — |
+
+### Cause
+The IP is correct but port 9999 has no listener. The OS sends a TCP RST immediately upon receiving the SYN, resulting in instant `Connection refused`. Unlike Test 2 (timeout), this fails instantly because the host is reachable but actively refuses the connection on that port.
+
+### Restore
+Nothing to restore — no configuration was changed.
+
+```zsh
+# Verify system still healthy
+curl -s --cacert configs/tls/team1.test.crt \
+  --resolve app.team1.test:8443:10.7.17.151 \
+  https://app.team1.test:8443/api/status
+```
+
+**Restored:** [ ] Confirmed — HTTP 200 with correct backend
+
+**Evidence file:** `evidence/script8/test6_wrong_port/test6_output.txt`
+
+---
+
+## Summary Table
+
+| # | Test | Layer | Expected Error | Actual Result | Restored |
+|---|------|-------|---------------|---------------|---------|
+| 1 | Wrong DNS server | DNS | curl (6) — could not resolve | [FILL] | [ ] |
+| 2 | Wrong DNS record | DNS→TCP | curl (28) — connection timeout | [FILL] | [ ] |
+| 3 | Stop Backend A | Application | All traffic → B only | [FILL] | [ ] |
+| 4 | Stop Backend B | Application | All traffic → A only | [FILL] | [ ] |
+| 5 | Stop both backends | Application | HTTP 502 Bad Gateway | [FILL] | [ ] |
+| 6 | Wrong port | TCP | curl (7) — connection refused | [FILL] | [ ] |
+
+---
+
+## Script 8 Completion Conditions
+
+- [ ] All 6 tests executed
+- [ ] Each test has output saved in `evidence/script8/test*/`
+- [ ] Each system restored and verified after each test
+- [ ] Summary table filled in with actual results
+- [ ] No permanent damage to working system
+
+---
+
+## Next Step
+
+Script 11 — Phase 2: Backend failover configuration in nginx (max_fails, fail_timeout).

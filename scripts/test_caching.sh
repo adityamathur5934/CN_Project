@@ -5,7 +5,7 @@
 # Usage: ./scripts/test_caching.sh
 # =============================================================================
 
-BACKEND_B="10.7.16.36:3002"
+BACKEND_B="10.7.2.96:3002"
 EDGE_IP="10.7.17.151"
 EDGE_PORT="8443"
 DOMAIN="app.team1.test"

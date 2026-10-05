@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Quick verification script for Backend B (Mac 4)
-LAN_IP=$(ipconfig getifaddr en0 2>/dev/null || echo "10.7.16.36")
+LAN_IP=$(ipconfig getifaddr en0 2>/dev/null || echo "10.7.2.96")
 
 echo "============================================="
 echo " 1. Testing GET / on localhost (127.0.0.1:3002)"

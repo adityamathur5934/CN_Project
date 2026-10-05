@@ -26,8 +26,8 @@ URL used: `https://app.team1.test`
 |------|---------|-----|------|
 | DNS Server | Mac 1 — Om | 10.7.15.236 | 53/UDP |
 | Edge / nginx | Mac 2 — Aditya | 10.7.17.151 | 443/TCP |
-| Backend A | Mac 3 — Krishiv | 10.7.10.0 | 3001/TCP |
-| Backend B | Mac 4 — Vaidehi | 10.7.16.36 | 3002/TCP |
+| Backend A | Mac 3 — Krishiv | 10.7.16.201 | 3001/TCP |
+| Backend B | Mac 4 — Vaidehi | 10.7.2.96 | 3002/TCP |
 | Test Client | Mac 2 / Mac 4 | — | ephemeral |
 
 ---
@@ -49,8 +49,8 @@ URL used: `https://app.team1.test`
 - [ ] DNS cache flushed (`sudo dscacheutil -flushcache && sudo killall -HUP mDNSResponder`)
 - [ ] Wireshark started and capturing on `en0`
 - [ ] nginx running (`brew services list | grep nginx`)
-- [ ] Backend A reachable: `curl http://10.7.10.0:3001/api/status`
-- [ ] Backend B reachable: `curl http://10.7.16.36:3002/api/status`
+- [ ] Backend A reachable: `curl http://10.7.16.201:3001/api/status`
+- [ ] Backend B reachable: `curl http://10.7.2.96:3002/api/status`
 
 ---
 
@@ -245,16 +245,16 @@ done
 
 ```bash
 # Backend A
-curl -sv http://10.7.10.0:3001/api/status
+curl -sv http://10.7.16.201:3001/api/status
 
 # Backend B
-curl -sv http://10.7.16.36:3002/api/status
+curl -sv http://10.7.2.96:3002/api/status
 ```
 
 | Backend | IP:Port | HTTP Status | X-Backend Header |
 |---------|---------|-------------|-----------------|
-| A | 10.7.10.0:3001 | [FILL] | A |
-| B | 10.7.16.36:3002 | [FILL] | B |
+| A | 10.7.16.201:3001 | [FILL] | A |
+| B | 10.7.2.96:3002 | [FILL] | B |
 
 **Actual output file:** `evidence/script7/curl_output/direct_backends_[TIMESTAMP].txt`
 

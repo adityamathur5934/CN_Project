@@ -10,7 +10,7 @@ HTTP REST backend for the Computer Networks Project. Listens on `0.0.0.0:3002`.
 |------------------|-------------------------------|
 | Machine          | Mac 4                         |
 | Primary Role     | Backend Server B + Test Client|
-| LAN IP           | `10.7.16.36`                  |
+| LAN IP           | `10.7.2.96`                  |
 | Port             | `3002` (TCP)                  |
 | Header           | `X-Backend: B`                |
 
@@ -27,7 +27,7 @@ python3 server.py
 Expected startup output:
 ```
 =================================================
-[Backend B] Listening on 0.0.0.0:3002 (LAN IP: 10.7.16.36:3002)
+[Backend B] Listening on 0.0.0.0:3002 (LAN IP: 10.7.2.96:3002)
 [Backend B] Endpoints:  GET /   GET /api/status
 [Backend B] Headers:    X-Backend: B, Cache-Control: max-age=60, ETag: "backend-b-v1"
 [Backend B] Press Ctrl-C to stop.
@@ -80,7 +80,7 @@ Content-Type: application/json; charset=utf-8
 
 ### 3. Conditional Request (`If-None-Match` → 304 Not Modified)
 ```bash
-curl -si -H 'If-None-Match: "backend-b-v1"' http://10.7.16.36:3002/api/status
+curl -si -H 'If-None-Match: "backend-b-v1"' http://10.7.2.96:3002/api/status
 ```
 Expected output:
 ```http
@@ -102,7 +102,7 @@ curl -si http://127.0.0.1:3002/
 curl -si http://127.0.0.1:3002/api/status
 
 # Test LAN IP binding
-curl -si http://10.7.16.36:3002/api/status
+curl -si http://10.7.2.96:3002/api/status
 ```
 
 ---
@@ -110,7 +110,7 @@ curl -si http://10.7.16.36:3002/api/status
 ## Remote Verification (run from Mac 2 / P2 or Mac 1 / Mac 3)
 
 ```bash
-curl -si http://10.7.16.36:3002/api/status
+curl -si http://10.7.2.96:3002/api/status
 ```
 
 ---
@@ -119,8 +119,8 @@ curl -si http://10.7.16.36:3002/api/status
 
 ```nginx
 upstream backend_nodes {
-    server 10.7.10.0:3001;   # Backend A (Mac 3)
-    server 10.7.16.36:3002;  # Backend B (Mac 4)
+    server 10.7.16.201:3001;   # Backend A (Mac 3)
+    server 10.7.2.96:3002;  # Backend B (Mac 4)
 }
 ```
 

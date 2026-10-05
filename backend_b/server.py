@@ -97,7 +97,7 @@ def get_lan_ip() -> str:
         s.close()
         return ip
     except Exception:
-        return "10.7.16.36"
+        return "10.7.2.96"
 
 
 def main():
