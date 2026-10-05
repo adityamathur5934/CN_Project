@@ -31,7 +31,7 @@ Both `X-Backend: A` and `X-Backend: B` observed in responses through nginx.
 
 ```nginx
 upstream backend_nodes {
-    server 10.7.10.0:3001;    # Backend A — Mac 3 (Krishiv)
+    server 10.7.16.201:3001;    # Backend A — Mac 3 (Krishiv)
     server 10.7.16.36:3002;   # Backend B — Mac 4 (Vaidehi)
 }
 
@@ -70,7 +70,7 @@ server {
 ### Direct backend tests
 
 ```
-curl http://10.7.10.0:3001/api/status
+curl http://10.7.16.201:3001/api/status
 → HTTP 200  X-Backend: A  {"backend": "A", "status": "ok"}
 
 curl http://10.7.16.36:3002/api/status

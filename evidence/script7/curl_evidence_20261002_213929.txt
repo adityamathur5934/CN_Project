@@ -70,6 +70,6 @@ Component         | IP              | Port
 ------------------|-----------------|-----
 DNS Server (Mac1) | 10.7.15.236     | 53/UDP
 nginx Edge (Mac2) | 10.7.17.151     | 443/TCP
-Backend A  (Mac3) | 10.7.10.0       | 3001/TCP
+Backend A  (Mac3) | 10.7.16.201       | 3001/TCP
 Backend B  (Mac4) | 10.7.16.36      | 3002/TCP
 

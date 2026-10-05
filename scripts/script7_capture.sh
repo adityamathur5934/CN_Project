@@ -14,7 +14,7 @@
 #   - Wireshark capture already running on en0 (start it BEFORE this script)
 #   - DNS resolves app.team1.test → 10.7.17.151  (Mac 1 dnsmasq)
 #   - nginx serving HTTPS on 443 with self-signed cert in configs/tls/
-#   - Backend A (10.7.10.0:3001) and Backend B (10.7.16.36:3002) are up
+#   - Backend A (10.7.16.201:3001) and Backend B (10.7.16.36:3002) are up
 #
 # RUN:
 #   chmod +x scripts/script7_capture.sh
@@ -106,7 +106,7 @@ echo "--- [4/4] Direct backend health checks (no TLS, direct IP) ---"
 DIRECT_OUT="${OUTDIR}/direct_backends_${TIMESTAMP}.txt"
 
 echo "=== Backend A direct ===" | tee "${DIRECT_OUT}"
-curl -sv http://10.7.10.0:3001/api/status 2>&1 | tee -a "${DIRECT_OUT}" || \
+curl -sv http://10.7.16.201:3001/api/status 2>&1 | tee -a "${DIRECT_OUT}" || \
   echo "Backend A unreachable" | tee -a "${DIRECT_OUT}"
 
 echo "" | tee -a "${DIRECT_OUT}"

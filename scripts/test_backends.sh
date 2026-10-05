@@ -5,7 +5,7 @@
 # Usage: ./scripts/test_backends.sh
 # =============================================================================
 
-BACKEND_A="10.7.10.0:3001"
+BACKEND_A="10.7.16.201:3001"
 BACKEND_B="10.7.16.36:3002"
 EDGE="10.7.17.151:8080"
 
@@ -70,7 +70,7 @@ check_backend() {
   echo ""
 }
 
-check_backend "Backend A — Mac 3 Krishiv" "10.7.10.0" "3001" "A"
+check_backend "Backend A — Mac 3 Krishiv" "10.7.16.201" "3001" "A"
 check_backend "Backend B — Mac 4 Vaidehi" "10.7.16.36" "3002" "B"
 
 # Edge health check
