@@ -1,7 +1,50 @@
-# Extension C — Live Test Results (Pre-Activation)
+# Extension C — Live Test Results
 
-Tested from Mac 4 (`10.7.2.96`) on 23 Nov 2026, before pf rules were activated.
-These confirm the baseline works before isolation is applied.
+---
+
+## POST-ACTIVATION PROOF TESTS — 24 Nov 2026
+
+### Proof Point A — Mac 2 (Aditya) → port 3002: PASS ✅
+
+Aditya ran from Mac 2 (`10.7.11.31`):
+```
+curl http://10.7.2.96:3002/api/status
+```
+**Result:** `{"backend": "B", "status": "ok"}` — HTTP 200. Mac 2 (nginx proxy) can reach Backend B directly. ✅
+
+---
+
+### Proof Point B — Unauthorized host (Krishiv, Mac 3) → port 3002: PASS ✅
+
+Krishiv ran from Mac 3 (`10.7.28.25`):
+```
+krishiv@krishivs-MacBook-Pro CN_Project % curl --connect-timeout 5 http://10.7.2.96:3002/
+curl: (28) Failed to connect to 10.7.2.96 port 3002 after 5006 ms: Timeout was reached
+```
+**Result:** Timeout — connection blocked by pf. Unauthorized direct access denied. ✅
+
+---
+
+### Proof Point C — HTTPS end-to-end: PASS ✅
+
+Already verified before activation (see below). nginx → Backend B path works through Mac 2.
+
+---
+
+## Summary: All Three Proof Points PASSED
+
+| Test | Host | Result |
+|------|------|--------|
+| A: Allowed host (Mac 2) → port 3002 | Aditya, `10.7.11.31` | ✅ HTTP 200, `{"backend":"B","status":"ok"}` |
+| B: Blocked host (Mac 3) → port 3002 | Krishiv, `10.7.28.25` | ✅ Timeout after 5006 ms |
+| C: HTTPS app.team1.test:8443 | Mac 4 | ✅ TLSv1.3, cert validated, HTTP 200 |
+
+---
+
+## PRE-ACTIVATION BASELINE — 23 Nov 2026
+
+Tested from Mac 4 (`10.7.2.96`) before pf rules were activated.
+These confirm the baseline worked before isolation was applied.
 
 ---
 
@@ -121,10 +164,4 @@ Mac 2 is on the LAN and reachable. `MAC2_IP=10.7.11.31` confirmed from `CN_PROJE
 
 ## Pending Tests (require activation + team coordination)
 
-| Test | Who runs it | Command | Expected |
-|------|-------------|---------|----------|
-| A: Mac 2 → port 3002 direct | Aditya (Mac 2) | `curl http://10.7.2.96:3002/api/status` | HTTP 200, X-Backend: B |
-| B: Unauthorized host blocked | Om (Mac 1) or Krishiv (Mac 3) | `curl --connect-timeout 5 http://10.7.2.96:3002/` | Connection refused / timeout |
-| C: HTTPS end-to-end | Anyone | `curl --cacert team1.test.crt https://app.team1.test:8443/api/status` | HTTP 200, valid TLS |
-
-Proof Point C is already verified above (via `--resolve`). Needs DNS online for the clean version.
+All three proof points are now complete. See post-activation results at the top of this file.

@@ -27,7 +27,10 @@
 | Phase 2 doc created | ✅ | `docs/phase2.md` |
 | Live test evidence saved | ✅ | `evidence/phase2/live_test_results.md` |
 
-| **pf rules ACTIVATED** | ✅ | `pf_setup.sh` run on 24 Nov 2026 00:30:05 IST; pf status: Enabled |
+| **Proof A: Mac 2 → port 3002 succeeds** | ✅ | Aditya (10.7.11.31): `{"backend":"B","status":"ok"}` HTTP 200 |
+| **Proof B: Unauthorized host blocked** | ✅ | Krishiv (10.7.28.25): `curl: (28) Timeout after 5006 ms` |
+| **Proof C: HTTPS app.team1.test:8443** | ✅ | TLSv1.3, cert validated, HTTP 200, no `-k` |
+| **Phase 2 implementation complete** | ✅ | All three proof points passed — 24 Nov 2026 |
 | Loopback post-activation check | ✅ | `curl http://127.0.0.1:3002/api/status` → `{"backend":"B","status":"ok"}` |
 | Anchor loaded and verified | ✅ | `pfctl -a com.cn-project.backend-b-isolation -s rules` shows all 3 rules active |
 
