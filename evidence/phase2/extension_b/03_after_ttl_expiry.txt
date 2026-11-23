@@ -1,0 +1,27 @@
+=== AFTER 32 SECONDS (TTL=30 expired) ===
+Timestamp: Mon Nov 23 23:17:32 IST 2026
+
+--- Flush macOS DNS cache ---
+Cache flushed
+
+--- Query after TTL expiry + cache flush ---
+
+; <<>> DiG 9.10.6 <<>> app.team1.test @10.7.10.8
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 59791
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;app.team1.test.			IN	A
+
+;; ANSWER SECTION:
+app.team1.test.		30	IN	A	10.7.11.99
+
+;; Query time: 0 msec
+;; SERVER: 10.7.10.8#53(10.7.10.8)
+;; WHEN: Mon Nov 23 23:17:33 IST 2026
+;; MSG SIZE  rcvd: 59
+

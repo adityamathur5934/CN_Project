@@ -1,0 +1,28 @@
+=== POST-CUTOVER STATE ===
+Timestamp: Mon Nov 23 23:44:34 IST 2026
+
+--- DNS now resolves to standby ---
+
+; <<>> DiG 9.10.6 <<>> app.team1.test @10.7.10.8
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 50632
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;app.team1.test.			IN	A
+
+;; ANSWER SECTION:
+app.team1.test.		30	IN	A	10.7.28.25
+
+;; Query time: 0 msec
+;; SERVER: 10.7.10.8#53(10.7.10.8)
+;; WHEN: Mon Nov 23 23:44:34 IST 2026
+;; MSG SIZE  rcvd: 59
+
+
+--- curl via domain name hits standby edge ---
+{"backend": "A", "status": "ok"}
+{"edge":"mac2","status":"ok","ip":"10.7.17.151","proto":"https"}

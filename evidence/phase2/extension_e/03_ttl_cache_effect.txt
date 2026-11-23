@@ -1,0 +1,38 @@
+=== TTL CACHE EFFECT DURING MIGRATION ===
+Timestamp: Mon Nov 23 23:44:43 IST 2026
+
+--- Client with stale cache still resolves old IP (system resolver) ---
+
+; <<>> DiG 9.10.6 <<>> app.team1.test
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 24916
+;; flags: qr rd ra ad; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 512
+;; QUESTION SECTION:
+;app.team1.test.			IN	A
+
+;; AUTHORITY SECTION:
+.			86388	IN	SOA	a.root-servers.net. nstld.verisign-grs.com. 2026112300 1800 900 604800 86400
+
+;; Query time: 10 msec
+;; SERVER: 8.8.8.8#53(8.8.8.8)
+;; WHEN: Mon Nov 23 23:44:43 IST 2026
+;; MSG SIZE  rcvd: 118
+
+
+--- Waiting 32s for TTL to expire then flushing cache ---
+Timestamp after wait: Mon Nov 23 23:45:15 IST 2026
+
+Cache flushed
+
+--- After TTL expiry + cache flush: resolves to standby ---
+
+; <<>> DiG 9.10.6 <<>> app.team1.test @10.7.10.8 +noall +answer
+;; global options: +cmd
+app.team1.test.		30	IN	A	10.7.28.25
+
+--- curl via domain confirms standby edge serving traffic ---
+{"backend": "A", "status": "ok"}

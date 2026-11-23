@@ -1,0 +1,29 @@
+=== PRE-CUTOVER STATE ===
+Timestamp: Mon Nov 23 23:44:14 IST 2026
+
+--- Primary DNS resolves app.team1.test ---
+
+; <<>> DiG 9.10.6 <<>> app.team1.test @10.7.10.8
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 47779
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;app.team1.test.			IN	A
+
+;; ANSWER SECTION:
+app.team1.test.		30	IN	A	10.7.11.31
+
+;; Query time: 0 msec
+;; SERVER: 10.7.10.8#53(10.7.10.8)
+;; WHEN: Mon Nov 23 23:44:14 IST 2026
+;; MSG SIZE  rcvd: 59
+
+
+--- Primary edge responding ---
+{"backend": "B", "status": "ok"}
+--- Standby edge responding directly ---
+{"edge":"standby-mac3","status":"ok","ip":"10.7.28.25","proto":"https"}

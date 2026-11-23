@@ -1,0 +1,46 @@
+=== IMMEDIATELY AFTER RECORD CHANGE (dnsmasq restarted) ===
+Timestamp: Mon Nov 23 23:16:53 IST 2026
+
+--- Query authoritative dnsmasq directly (new IP should appear) ---
+
+; <<>> DiG 9.10.6 <<>> app.team1.test @10.7.10.8
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 27376
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;app.team1.test.			IN	A
+
+;; ANSWER SECTION:
+app.team1.test.		30	IN	A	10.7.11.99
+
+;; Query time: 0 msec
+;; SERVER: 10.7.10.8#53(10.7.10.8)
+;; WHEN: Mon Nov 23 23:16:53 IST 2026
+;; MSG SIZE  rcvd: 59
+
+
+--- Query system resolver (may still have old cached answer) ---
+
+; <<>> DiG 9.10.6 <<>> app.team1.test
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 6997
+;; flags: qr rd ra ad; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 512
+;; QUESTION SECTION:
+;app.team1.test.			IN	A
+
+;; AUTHORITY SECTION:
+.			86052	IN	SOA	a.root-servers.net. nstld.verisign-grs.com. 2026112300 1800 900 604800 86400
+
+;; Query time: 18 msec
+;; SERVER: 8.8.8.8#53(8.8.8.8)
+;; WHEN: Mon Nov 23 23:16:53 IST 2026
+;; MSG SIZE  rcvd: 118
+

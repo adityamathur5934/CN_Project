@@ -1,0 +1,50 @@
+=== PRIMARY DNS DEAD - querying backup at 10.7.28.25 ===
+--- Attempting primary (should fail/timeout) ---
+
+; <<>> DiG 9.10.6 <<>> app.team1.test @10.7.10.8 +time=2 +tries=1
+;; global options: +cmd
+;; connection timed out; no servers could be reached
+
+--- Querying backup resolver 10.7.28.25 ---
+
+; <<>> DiG 9.10.6 <<>> app.team1.test @10.7.28.25
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 35891
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;app.team1.test.			IN	A
+
+;; ANSWER SECTION:
+app.team1.test.		30	IN	A	10.7.11.31
+
+;; Query time: 119 msec
+;; SERVER: 10.7.28.25#53(10.7.28.25)
+;; WHEN: Mon Nov 23 23:16:26 IST 2026
+;; MSG SIZE  rcvd: 59
+
+
+--- Querying api.team1.test via backup ---
+
+; <<>> DiG 9.10.6 <<>> api.team1.test @10.7.28.25
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 19124
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;api.team1.test.			IN	A
+
+;; ANSWER SECTION:
+api.team1.test.		30	IN	A	10.7.11.31
+
+;; Query time: 11 msec
+;; SERVER: 10.7.28.25#53(10.7.28.25)
+;; WHEN: Mon Nov 23 23:16:26 IST 2026
+;; MSG SIZE  rcvd: 59
+
