@@ -26,7 +26,7 @@
 ### Mac 1 — Om
 
 - Role: DNS + Client
-- IPv4: `10.7.15.236`
+- IPv4: `10.7.10.8`
 - Interface: `en0`
 - Gateway: `10.7.0.1`
 - DNS service: `dnsmasq`
@@ -35,7 +35,7 @@
 ### Mac 2 — Aditya
 
 - Role: Edge / Reverse Proxy / Load Balancer
-- IPv4: `10.7.17.151`
+- IPv4: `10.7.11.31`
 - Interface: `en0`
 - Gateway: `10.7.0.1`
 - Reverse proxy: `nginx`
@@ -45,7 +45,7 @@
 ### Mac 3 — Krishiv
 
 - Role: Backend A
-- IPv4: `10.7.16.201`
+- IPv4: `10.7.28.25`
 - Interface: `en0`
 - Gateway: `10.7.0.1`
 - HTTP port: `3001`
@@ -66,13 +66,13 @@ Domain: `team1.test`
 
 Records:
 
-app.team1.test → `10.7.17.151`
-api.team1.test → `10.7.17.151`
+app.team1.test → `10.7.11.31`
+api.team1.test → `10.7.11.31`
 
 Expected:
 
-app.team1.test → `10.7.17.151`
-api.team1.test → `10.7.17.151`
+app.team1.test → `10.7.11.31`
+api.team1.test → `10.7.11.31`
 
 ---
 
@@ -89,7 +89,7 @@ Listen:
 
 Backend A:
 
-`10.7.16.201:3001`
+`10.7.28.25:3001`
 
 Backend B:
 
@@ -105,7 +105,7 @@ Round-robin
 
 Host:
 
-`10.7.16.201`
+`10.7.28.25`
 
 Port:
 
