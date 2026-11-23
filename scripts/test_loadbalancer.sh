@@ -5,7 +5,7 @@
 # Usage: ./scripts/test_loadbalancer.sh
 # =============================================================================
 
-EDGE_IP="10.7.17.151"
+EDGE_IP="10.7.11.31"
 EDGE_PORT="8080"
 DOMAIN="app.team.test"
 REQUESTS=10

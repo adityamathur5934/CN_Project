@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
 # =============================================================================
 # Script 8 — Phase 1 Failure Tests (Automated: Tests 3, 4, 5)
-# Project: CN_Project | Machine: Mac 2 (Aditya) — 10.7.17.151
+# Project: CN_Project | Machine: Mac 2 (Aditya) — 10.7.11.31
 #
 # Tests covered here (run from Mac 2, no coordination needed):
 #   Test 3 — Stop Backend A  → nginx should serve B only
@@ -24,8 +24,8 @@ OUTDIR="evidence/script8"
 CERT="configs/tls/team1.test.crt"
 DOMAIN="app.team1.test"
 URL="https://${DOMAIN}:8443/api/status"
-RESOLVE="--resolve ${DOMAIN}:8443:10.7.17.151"
-BACKEND_A_HOST="10.7.16.201"
+RESOLVE="--resolve ${DOMAIN}:8443:10.7.11.31"
+BACKEND_A_HOST="10.7.28.25"
 BACKEND_B_HOST="10.7.2.96"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 
@@ -74,7 +74,7 @@ echo ""
 # TEST 3 — Stop Backend A
 # ---------------------------------------------------------------------------
 echo "============================================"
-echo "TEST 3 — Stop Backend A (Mac 3 / 10.7.16.201:3001)"
+echo "TEST 3 — Stop Backend A (Mac 3 / 10.7.28.25:3001)"
 echo "============================================"
 T3_OUT="${OUTDIR}/test3_stop_backend_a/test3_${TIMESTAMP}.txt"
 

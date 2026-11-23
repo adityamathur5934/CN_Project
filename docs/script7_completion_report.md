@@ -25,8 +25,8 @@ URL used: `https://app.team1.test`
 | Role | Machine | IP | Port |
 |------|---------|-----|------|
 | DNS Server | Mac 1 — Om | 10.7.15.236 | 53/UDP |
-| Edge / nginx | Mac 2 — Aditya | 10.7.17.151 | 443/TCP |
-| Backend A | Mac 3 — Krishiv | 10.7.16.201 | 3001/TCP |
+| Edge / nginx | Mac 2 — Aditya | 10.7.11.31 | 443/TCP |
+| Backend A | Mac 3 — Krishiv | 10.7.28.25 | 3001/TCP |
 | Backend B | Mac 4 — Vaidehi | 10.7.2.96 | 3002/TCP |
 | Test Client | Mac 2 / Mac 4 | — | ephemeral |
 
@@ -39,7 +39,7 @@ URL used: `https://app.team1.test`
 | Setting | Value |
 |---------|-------|
 | Interface | `en0` (Wi-Fi) |
-| Capture filter (optional) | `host 10.7.17.151 or host 10.7.15.236` |
+| Capture filter (optional) | `host 10.7.11.31 or host 10.7.15.236` |
 | **nginx HTTPS port** | **8443** (not 443 — brew nginx runs unprivileged) |
 | Display filter (analysis) | see Section 4 |
 | Output file | `evidence/script7/pcap/script7_[TIMESTAMP].pcapng` |
@@ -49,7 +49,7 @@ URL used: `https://app.team1.test`
 - [ ] DNS cache flushed (`sudo dscacheutil -flushcache && sudo killall -HUP mDNSResponder`)
 - [ ] Wireshark started and capturing on `en0`
 - [ ] nginx running (`brew services list | grep nginx`)
-- [ ] Backend A reachable: `curl http://10.7.16.201:3001/api/status`
+- [ ] Backend A reachable: `curl http://10.7.28.25:3001/api/status`
 - [ ] Backend B reachable: `curl http://10.7.2.96:3002/api/status`
 
 ---
@@ -63,16 +63,16 @@ URL used: `https://app.team1.test`
 dns
 
 # TCP handshake to nginx
-tcp and ip.addr == 10.7.17.151 and (tcp.flags.syn == 1 or tcp.flags.ack == 1)
+tcp and ip.addr == 10.7.11.31 and (tcp.flags.syn == 1 or tcp.flags.ack == 1)
 
 # TLS handshake
-tls and ip.addr == 10.7.17.151
+tls and ip.addr == 10.7.11.31
 
 # All TLS application data
 tls.record.content_type == 23
 
 # Full conversation to nginx port 8443
-tcp.port == 8443 and ip.addr == 10.7.17.151
+tcp.port == 8443 and ip.addr == 10.7.11.31
 ```
 
 ---
@@ -89,46 +89,46 @@ tcp.port == 8443 and ip.addr == 10.7.17.151
 | Destination IP (Query) | 10.7.15.236 (Mac 1 dnsmasq) |
 | Protocol | DNS / UDP port 53 |
 | Query name | `app.team1.test` |
-| Response — Answer | `app.team1.test → 10.7.17.151` |
+| Response — Answer | `app.team1.test → 10.7.11.31` |
 | Response TTL | [FILL] |
 
 **Screenshot:** `evidence/script7/screenshots/dns_query_response.png`
 
 **Explanation:**
-The client had no cached record for `app.team1.test` after the cache flush. It sent a DNS A-record query (Type A, Class IN) to the dnsmasq server on Mac 1 (10.7.15.236:53). dnsmasq responded with a single A record mapping `app.team1.test` to `10.7.17.151` (Mac 2 / nginx). The client now knows which IP to connect to.
+The client had no cached record for `app.team1.test` after the cache flush. It sent a DNS A-record query (Type A, Class IN) to the dnsmasq server on Mac 1 (10.7.15.236:53). dnsmasq responded with a single A record mapping `app.team1.test` to `10.7.11.31` (Mac 2 / nginx). The client now knows which IP to connect to.
 
 ---
 
 ### 4.3 TCP Three-Way Handshake
 
-**Display filter:** `tcp.port == 443 and ip.addr == 10.7.17.151`
+**Display filter:** `tcp.port == 443 and ip.addr == 10.7.11.31`
 
 | Step | Flag | Packet # | Source | Destination | Info |
 |------|------|----------|--------|-------------|------|
-| SYN | SYN | [FILL] | [client IP]:[ephemeral] | 10.7.17.151:443 | Seq=0 |
-| SYN-ACK | SYN,ACK | [FILL] | 10.7.17.151:443 | [client IP]:[ephemeral] | Seq=0 Ack=1 |
-| ACK | ACK | [FILL] | [client IP]:[ephemeral] | 10.7.17.151:443 | Ack=1 |
+| SYN | SYN | [FILL] | [client IP]:[ephemeral] | 10.7.11.31:443 | Seq=0 |
+| SYN-ACK | SYN,ACK | [FILL] | 10.7.11.31:443 | [client IP]:[ephemeral] | Seq=0 Ack=1 |
+| ACK | ACK | [FILL] | [client IP]:[ephemeral] | 10.7.11.31:443 | Ack=1 |
 
 **Screenshot:** `evidence/script7/screenshots/tcp_handshake.png`
 
 **Explanation:**
-The client opens a TCP connection to nginx on 10.7.17.151:443. The SYN initiates the connection, nginx responds with SYN-ACK confirming it accepts, and the client sends ACK to complete the handshake. No application data is exchanged yet — this is pure transport-layer setup before TLS begins.
+The client opens a TCP connection to nginx on 10.7.11.31:443. The SYN initiates the connection, nginx responds with SYN-ACK confirming it accepts, and the client sends ACK to complete the handshake. No application data is exchanged yet — this is pure transport-layer setup before TLS begins.
 
 ---
 
 ### 4.4 TLS Handshake
 
-**Display filter:** `tls and ip.addr == 10.7.17.151`
+**Display filter:** `tls and ip.addr == 10.7.11.31`
 
 | TLS Message | Packet # | Direction | Notes |
 |-------------|----------|-----------|-------|
-| Client Hello | [FILL] | Client → 10.7.17.151 | TLS 1.2/1.3, SNI=app.team1.test, cipher suites list |
-| Server Hello | [FILL] | 10.7.17.151 → Client | Chosen cipher suite, session ID |
-| Certificate | [FILL] | 10.7.17.151 → Client | nginx serves team1.test.crt (self-signed) |
-| Server Hello Done | [FILL] | 10.7.17.151 → Client | (TLS 1.2) |
-| Client Key Exchange | [FILL] | Client → 10.7.17.151 | Pre-master secret (TLS 1.2) |
-| Change Cipher Spec | [FILL] | Client → 10.7.17.151 | Switching to encrypted |
-| Change Cipher Spec | [FILL] | 10.7.17.151 → Client | nginx confirms encrypted |
+| Client Hello | [FILL] | Client → 10.7.11.31 | TLS 1.2/1.3, SNI=app.team1.test, cipher suites list |
+| Server Hello | [FILL] | 10.7.11.31 → Client | Chosen cipher suite, session ID |
+| Certificate | [FILL] | 10.7.11.31 → Client | nginx serves team1.test.crt (self-signed) |
+| Server Hello Done | [FILL] | 10.7.11.31 → Client | (TLS 1.2) |
+| Client Key Exchange | [FILL] | Client → 10.7.11.31 | Pre-master secret (TLS 1.2) |
+| Change Cipher Spec | [FILL] | Client → 10.7.11.31 | Switching to encrypted |
+| Change Cipher Spec | [FILL] | 10.7.11.31 → Client | nginx confirms encrypted |
 | Finished | [FILL] | Both | Handshake complete |
 
 > **Note on TLS 1.3:** If nginx negotiates TLS 1.3, the handshake is compressed — Certificate and Key Exchange are encrypted inside EncryptedExtensions. Wireshark will show fewer distinct messages but `tls` filter still reveals Client Hello / Server Hello with the SNI field.
@@ -146,7 +146,7 @@ After the TCP handshake, TLS negotiation begins. The Client Hello advertises sup
 
 ### 4.5 Encrypted Application Data
 
-**Display filter:** `tls.record.content_type == 23 and ip.addr == 10.7.17.151`
+**Display filter:** `tls.record.content_type == 23 and ip.addr == 10.7.11.31`
 *(Content type 23 = Application Data)*
 
 | Direction | Packet # | Length | Notes |
@@ -169,13 +169,13 @@ These packets contain the actual HTTP/1.1 request and response, but they are ful
 |---|-------|--------|----------|--------|----------|----------|
 | 1 | DNS Query | [client] | ephemeral | 10.7.15.236 | 53 | UDP |
 | 2 | DNS Response | 10.7.15.236 | 53 | [client] | ephemeral | UDP |
-| 3 | TCP SYN | [client] | [ephemeral] | 10.7.17.151 | 8443 | TCP |
-| 4 | TCP SYN-ACK | 10.7.17.151 | 8443 | [client] | [ephemeral] | TCP |
-| 5 | TCP ACK | [client] | [ephemeral] | 10.7.17.151 | 8443 | TCP |
-| 6 | TLS Client Hello | [client] | [ephemeral] | 10.7.17.151 | 8443 | TLSv1.x |
-| 7 | TLS Server Hello + Cert | 10.7.17.151 | 8443 | [client] | [ephemeral] | TLSv1.x |
-| 8 | TLS App Data (request) | [client] | [ephemeral] | 10.7.17.151 | 8443 | TLSv1.x |
-| 9 | TLS App Data (response) | 10.7.17.151 | 8443 | [client] | [ephemeral] | TLSv1.x |
+| 3 | TCP SYN | [client] | [ephemeral] | 10.7.11.31 | 8443 | TCP |
+| 4 | TCP SYN-ACK | 10.7.11.31 | 8443 | [client] | [ephemeral] | TCP |
+| 5 | TCP ACK | [client] | [ephemeral] | 10.7.11.31 | 8443 | TCP |
+| 6 | TLS Client Hello | [client] | [ephemeral] | 10.7.11.31 | 8443 | TLSv1.x |
+| 7 | TLS Server Hello + Cert | 10.7.11.31 | 8443 | [client] | [ephemeral] | TLSv1.x |
+| 8 | TLS App Data (request) | [client] | [ephemeral] | 10.7.11.31 | 8443 | TLSv1.x |
+| 9 | TLS App Data (response) | 10.7.11.31 | 8443 | [client] | [ephemeral] | TLSv1.x |
 
 > Fill [client] and [ephemeral] with actual values from your capture.
 
@@ -190,7 +190,7 @@ All curl output is saved in `evidence/script7/curl_output/`.
 ```bash
 curl -v \
   --cacert configs/tls/team1.test.crt \
-  --resolve app.team1.test:8443:10.7.17.151 \
+  --resolve app.team1.test:8443:10.7.11.31 \
   https://app.team1.test:8443/api/status
 ```
 
@@ -215,7 +215,7 @@ Key fields to record from output:
 for i in {1..8}; do
   curl -sI \
     --cacert configs/tls/team1.test.crt \
-    --resolve app.team1.test:8443:10.7.17.151 \
+    --resolve app.team1.test:8443:10.7.11.31 \
     https://app.team1.test:8443/api/status \
     | grep -i "x-backend:"
   sleep 0.3
@@ -245,7 +245,7 @@ done
 
 ```bash
 # Backend A
-curl -sv http://10.7.16.201:3001/api/status
+curl -sv http://10.7.28.25:3001/api/status
 
 # Backend B
 curl -sv http://10.7.2.96:3002/api/status
@@ -253,7 +253,7 @@ curl -sv http://10.7.2.96:3002/api/status
 
 | Backend | IP:Port | HTTP Status | X-Backend Header |
 |---------|---------|-------------|-----------------|
-| A | 10.7.16.201:3001 | [FILL] | A |
+| A | 10.7.28.25:3001 | [FILL] | A |
 | B | 10.7.2.96:3002 | [FILL] | B |
 
 **Actual output file:** `evidence/script7/curl_output/direct_backends_[TIMESTAMP].txt`

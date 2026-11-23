@@ -27,13 +27,13 @@
 | Role            | Edge / Reverse Proxy / Load Balancer / TLS |
 | Person          | P2 (Aditya)        |
 | Interface       | en0 (Wi-Fi / LAN)  |
-| Private IPv4    | 10.7.17.151        |
+| Private IPv4    | 10.7.11.31        |
 | Netmask         | 255.255.224.0 (/19)|
 | Gateway         | 10.7.0.1           |
 | MAC Address     | a2:24:e2:34:6f:4d  |
 | Hostname        | Adityas-MacBook-Pro-2.local |
 | Service Port    | 443 (HTTPS) / 8443 if 443 unavailable |
-| DNS to serve    | app.team.test → 10.7.17.151 |
+| DNS to serve    | app.team.test → 10.7.11.31 |
 
 ---
 
@@ -89,8 +89,8 @@
 | Machine | IP            | Port | Protocol | Service         |
 |---------|---------------|------|----------|-----------------|
 | Mac 1   | [P1_IP]       | 53   | UDP/TCP  | DNS (dnsmasq)   |
-| Mac 2   | 10.7.17.151   | 443  | TCP      | HTTPS (nginx)   |
-| Mac 2   | 10.7.17.151   | 80   | TCP      | HTTP → redirect |
+| Mac 2   | 10.7.11.31   | 443  | TCP      | HTTPS (nginx)   |
+| Mac 2   | 10.7.11.31   | 80   | TCP      | HTTP → redirect |
 | Mac 3   | [P3_IP]       | 3001 | TCP      | Backend A (HTTP)|
 | Mac 4   | [P4_IP]       | 3002 | TCP      | Backend B (HTTP)|
 
@@ -100,8 +100,8 @@
 
 | DNS Record             | Resolves To    | Purpose                  |
 |------------------------|----------------|--------------------------|
-| app.team.test          | 10.7.17.151    | Main HTTPS entry point   |
-| api.team.test          | 10.7.17.151    | API entry point (alias)  |
+| app.team.test          | 10.7.11.31    | Main HTTPS entry point   |
+| api.team.test          | 10.7.11.31    | API entry point (alias)  |
 
 > **Domain:** `team.test` — change `team` to your actual team identifier (e.g., `team4.test`, `teamX.test`)
 > Do NOT use `.local` — conflicts with macOS mDNS/Bonjour.
@@ -117,9 +117,9 @@
 | Mac2 → Mac1       | [P1_IP]       | ⏳ TODO  | P2        |
 | Mac2 → Mac3       | [P3_IP]       | ⏳ TODO  | P2        |
 | Mac2 → Mac4       | [P4_IP]       | ⏳ TODO  | P2        |
-| Mac1 → Mac2       | 10.7.17.151   | ⏳ TODO  | P1        |
-| Mac3 → Mac2       | 10.7.17.151   | ⏳ TODO  | P3        |
-| Mac4 → Mac2       | 10.7.17.151   | ⏳ TODO  | P4        |
+| Mac1 → Mac2       | 10.7.11.31   | ⏳ TODO  | P1        |
+| Mac3 → Mac2       | 10.7.11.31   | ⏳ TODO  | P3        |
+| Mac4 → Mac2       | 10.7.11.31   | ⏳ TODO  | P4        |
 | Mac3 → Mac4       | [P4_IP]       | ⏳ TODO  | P3        |
 
 ---
@@ -133,4 +133,4 @@
 - [ ] Service ports confirmed: Mac2=443, Mac3=3001, Mac4=3002, Mac1=53
 - [ ] This inventory shared with all teammates
 
-**Mac 2 (P2) is DONE with Script 0 — IP confirmed: 10.7.17.151**
+**Mac 2 (P2) is DONE with Script 0 — IP confirmed: 10.7.11.31**

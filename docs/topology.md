@@ -19,12 +19,12 @@
    │  Private DNS    │      │  Edge / nginx    │    │  Backend B      │
    │  P1             │      │  P2 (YOU)        │    │  + Test Client  │
    │                 │      │                  │    │  P4             │
-   │  IP: [P1_IP]   │      │  IP: 10.7.17.151 │    │  IP: [P4_IP]   │
+   │  IP: [P1_IP]   │      │  IP: 10.7.11.31 │    │  IP: [P4_IP]   │
    │  Port: 53      │      │  Port: 443(HTTPS) │    │  Port: 3002    │
    │  dnsmasq       │◄─────│  Port: 80(HTTP)  │    │  GET /api/status│
    │                 │      │                  │    │  X-Backend: B  │
    │  app.team.test  │      │  TLS termination │    └────────┬────────┘
-   │  → 10.7.17.151  │      │  Reverse proxy   │             │
+   │  → 10.7.11.31  │      │  Reverse proxy   │             │
    └────────┬────────┘      │  Load balancer   │    ┌────────▼────────┐
             │               └────────┬─────────┘    │     MAC 3       │
             │  DNS queries            │              │  Backend A      │
@@ -51,10 +51,10 @@ Browser / curl on Client Mac
         │     "app.team.test → ?"
         ▼
    Mac 1 (dnsmasq)
-        │  DNS Response: 10.7.17.151
+        │  DNS Response: 10.7.11.31
         │
         ▼
-   Mac 2 — nginx (10.7.17.151:443)
+   Mac 2 — nginx (10.7.11.31:443)
         │
         │  2. TCP SYN → SYN-ACK → ACK  (three-way handshake)
         │  3. TLS ClientHello → ServerHello → Certificate
@@ -117,9 +117,9 @@ DNS uses **UDP port 53** (Layer 4 Transport / Layer 3 Network) — it runs *befo
   ┌──────────────┐           ┌───────────────┐
   │  Mac 2       │ ──DNS──►  │  Standby Mac  │
   │  Primary edge│  migration│  nginx copy   │
-  │  10.7.17.151 │           │  [STANDBY_IP] │
+  │  10.7.11.31 │           │  [STANDBY_IP] │
   └──────────────┘           └───────────────┘
-    app.team.test DNS record updated from 10.7.17.151 → [STANDBY_IP]
+    app.team.test DNS record updated from 10.7.11.31 → [STANDBY_IP]
     Old cached clients temporarily reach old edge (TTL demonstration)
 ```
 
@@ -130,7 +130,7 @@ DNS uses **UDP port 53** (Layer 4 Transport / Layer 3 Network) — it runs *befo
 | Hostname           | IP            | Port(s)   | Owner |
 |--------------------|---------------|-----------|-------|
 | Mac 1 (DNS)        | [P1_IP]       | 53        | P1    |
-| Mac 2 (Edge/nginx) | **10.7.17.151** | **443**, 80 | **P2 (YOU)** |
+| Mac 2 (Edge/nginx) | **10.7.11.31** | **443**, 80 | **P2 (YOU)** |
 | Mac 3 (Backend A)  | [P3_IP]       | 3001      | P3    |
 | Mac 4 (Backend B)  | [P4_IP]       | 3002      | P4    |
 

@@ -38,8 +38,8 @@ When troubleshooting any platform incident, always diagnose layer by layer in se
 | # | Test | Fault Injected | Observed Output | Layer Identified | Root Cause | Recovery Action |
 |---|------|----------------|-----------------|------------------|------------|-----------------|
 | **1** | Wrong DNS Server | Queried unassigned IP `10.7.15.250` / `8.8.8.8` | `connection timed out; no servers could be reached` / `NXDOMAIN` | **DNS Layer** | No service listening on UDP 53; private records not present on public DNS. | Reverted client resolver to Mac 1 (`10.7.15.236`). |
-| **2** | Wrong DNS Record | Resolved domain to unassigned IP `10.7.16.200` | `curl: (28) Failed to connect ... Timeout was reached` | **Transport (TCP) / Network Layer** | Domain resolved to host that does not answer TCP SYN packets (no SYN-ACK). | Restored DNS A record to Mac 2 Edge (`10.7.17.151`). |
-| **3** | Stop Backend A | Backend A process stopped on Mac 3 | Edge returns `HTTP 200` with `X-Backend: B` | **Upstream TCP ➔ Application Layer** | Nginx detected TCP RST / drop on `10.7.16.201:3001` and failed over to Backend B. | Mac 3 restarted Backend A daemon; round-robin restored. |
+| **2** | Wrong DNS Record | Resolved domain to unassigned IP `10.7.16.200` | `curl: (28) Failed to connect ... Timeout was reached` | **Transport (TCP) / Network Layer** | Domain resolved to host that does not answer TCP SYN packets (no SYN-ACK). | Restored DNS A record to Mac 2 Edge (`10.7.11.31`). |
+| **3** | Stop Backend A | Backend A process stopped on Mac 3 | Edge returns `HTTP 200` with `X-Backend: B` | **Upstream TCP ➔ Application Layer** | Nginx detected TCP RST / drop on `10.7.28.25:3001` and failed over to Backend B. | Mac 3 restarted Backend A daemon; round-robin restored. |
 | **4** | Stop Backend B | Stopped Backend B daemon on Mac 4 (`./backend_b/stop.sh`) | Direct: `curl: (7) Connection refused`. Edge: `HTTP 200`, `X-Backend: A` | **Transport (TCP RST) at Backend ➔ Application at Edge** | Port 3002 closed, kernel returned TCP RST; Nginx rerouted all traffic to Backend A. | Executed `./backend_b/start.sh`; Backend B resumed participating in load balancing. |
 | **5** | Stop Both Backends | Both 3001 and 3002 ports unreachable | Edge returns `HTTP/1.1 502 Bad Gateway` (or cached 200 if cache valid) | **Application Layer (HTTP 502)** | Edge completes TLS handshake with client, but fails to establish TCP connection with any upstream node. | Restarted Backend A and Backend B daemons. |
 | **6** | Wrong Destination Port | Requested closed port `8444` on Mac 2 Edge | `curl: (7) Failed to connect ... port 8444: Couldn't connect to server` | **Transport Layer (TCP)** | Edge host is reachable (ping OK), but no process is listening on TCP port 8444; kernel replies with TCP RST. | Reverted destination port to active HTTPS port (`:8443`). |
@@ -84,7 +84,7 @@ curl: (7) Failed to connect to 10.7.16.36 port 3002 after 3 ms: Couldn't connect
 ```
 ```bash
 # Request through Edge Nginx:
-curl -S -s -i --resolve app.team1.test:8443:10.7.17.151 https://app.team1.test:8443/api/status
+curl -S -s -i --resolve app.team1.test:8443:10.7.11.31 https://app.team1.test:8443/api/status
 ```
 ```http
 HTTP/1.1 200 OK
@@ -121,7 +121,7 @@ Connection: keep-alive
 
 ### Test 6: Wrong Destination Port
 ```bash
-curl -S -s -i --connect-timeout 3 --resolve app.team1.test:8444:10.7.17.151 https://app.team1.test:8444/api/status
+curl -S -s -i --connect-timeout 3 --resolve app.team1.test:8444:10.7.11.31 https://app.team1.test:8444/api/status
 ```
 ```
 curl: (7) Failed to connect to app.team1.test port 8444 after 7 ms: Couldn't connect to server

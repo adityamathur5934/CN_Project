@@ -8,7 +8,7 @@
 DOMAIN="app.team1.test"
 HTTPS_PORT="8443"
 HTTP_PORT="8080"
-EDGE_IP="10.7.17.151"
+EDGE_IP="10.7.11.31"
 CERT="/Users/aditya.2024/Documents/Projects/CN_Project/configs/tls/team1.test.crt"
 REQUESTS=8
 

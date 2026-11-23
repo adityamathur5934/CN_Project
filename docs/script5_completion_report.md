@@ -20,7 +20,7 @@ Both `X-Backend: A` and `X-Backend: B` confirmed over HTTPS. HTTP redirects to H
 | 4 | Added HTTP → HTTPS redirect | Port 8080 returns 301 |
 | 5 | Installed cert in macOS Keychain | `sudo security add-trusted-cert` |
 | 6 | Pointed Mac 2 DNS to Om's server | `networksetup -setdnsservers Wi-Fi 10.7.15.236 8.8.8.8` |
-| 7 | Added `/etc/hosts` entry | `10.7.17.151 app.team1.test api.team1.test` |
+| 7 | Added `/etc/hosts` entry | `10.7.11.31 app.team1.test api.team1.test` |
 | 8 | Validated all 5 checks pass | See test results below |
 
 ---
@@ -31,7 +31,7 @@ Both `X-Backend: A` and `X-Backend: B` confirmed over HTTPS. HTTP redirects to H
 File:       configs/tls/team1.test.crt
 Key:        configs/tls/team1.test.key (keep private — do not share)
 CN:         app.team1.test
-SAN:        DNS:app.team1.test, DNS:api.team1.test, IP:10.7.17.151
+SAN:        DNS:app.team1.test, DNS:api.team1.test, IP:10.7.11.31
 Valid:      Oct 1 2026 → Oct 1 2027  (1 year)
 Algorithm:  RSA 2048-bit
 Signature:  sha256WithRSAEncryption
@@ -46,14 +46,14 @@ Signature:  sha256WithRSAEncryption
 
 ```nginx
 upstream backend_nodes {
-    server 10.7.16.201:3001;    # Backend A — Mac 3 (Krishiv)
+    server 10.7.28.25:3001;    # Backend A — Mac 3 (Krishiv)
     server 10.7.2.96:3002;   # Backend B — Mac 4 (Vaidehi)
 }
 
 # HTTP — redirects to HTTPS
 server {
     listen      8080;
-    server_name app.team1.test 10.7.17.151;
+    server_name app.team1.test 10.7.11.31;
     location /health { return 200 '...'; }   # bypass — stays HTTP
     location / { return 301 https://$host:8443$request_uri; }
 }
@@ -61,7 +61,7 @@ server {
 # HTTPS — TLS termination + reverse proxy
 server {
     listen      8443 ssl;
-    server_name app.team1.test 10.7.17.151;
+    server_name app.team1.test 10.7.11.31;
     ssl_certificate     .../team1.test.crt;
     ssl_certificate_key .../team1.test.key;
     ssl_protocols       TLSv1.2 TLSv1.3;
@@ -80,7 +80,7 @@ server {
 
 ```
 [1/5] DNS resolution
-  ✅ app.team1.test → 10.7.17.151
+  ✅ app.team1.test → 10.7.11.31
 
 [2/5] HTTPS without -k
   ✅ curl https://app.team1.test:8443/health — HTTP 200 (no -k)
@@ -146,7 +146,7 @@ Either point DNS to Om's server, or add to `/etc/hosts`:
 networksetup -setdnsservers Wi-Fi 10.7.15.236 8.8.8.8
 
 # Option B — /etc/hosts entry
-echo "10.7.17.151 app.team1.test api.team1.test" | sudo tee -a /etc/hosts
+echo "10.7.11.31 app.team1.test api.team1.test" | sudo tee -a /etc/hosts
 ```
 
 ### Verify on their Mac

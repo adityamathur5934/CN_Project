@@ -82,7 +82,7 @@ def do_HEAD(self):
 ### Test 1 — Fresh request via nginx HTTPS (cache miss → 200)
 
 ```
-curl -s --resolve app.team1.test:8443:10.7.17.151 \
+curl -s --resolve app.team1.test:8443:10.7.11.31 \
      https://app.team1.test:8443/api/status -D - -o /dev/null
 
 HTTP/1.1 200 OK
@@ -227,7 +227,7 @@ curl -sv http://localhost:3001/api/status -H 'If-None-Match: "72db076608216f33"'
 
 ## Assumptions
 
-- Backend A is on Mac 3 (Krishiv) at `10.7.16.201:3001`
+- Backend A is on Mac 3 (Krishiv) at `10.7.28.25:3001`
 - ETag is MD5-derived — body is static so the ETag is effectively constant, but will auto-update if the body changes
 - `max-age=60` means clients may serve cached responses for up to 60 seconds before revalidating
 - DNS / nginx / TLS configuration not modified (P2 remains unchanged)

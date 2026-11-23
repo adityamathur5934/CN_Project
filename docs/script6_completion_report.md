@@ -96,7 +96,7 @@ ETag: "backend-b-v1"
 ### Test 3: Nginx Edge — Header Survival over HTTPS (HTTP 200, no `-k`)
 **Command:**
 ```bash
-curl -s -D - --resolve app.team1.test:8443:10.7.17.151 "https://app.team1.test:8443/api/status"
+curl -s -D - --resolve app.team1.test:8443:10.7.11.31 "https://app.team1.test:8443/api/status"
 ```
 **Output:**
 ```http
@@ -118,7 +118,7 @@ ETag: "backend-b-v1"
 ### Test 4: Nginx Edge — Conditional Revalidation over HTTPS (HTTP 304, no `-k`)
 **Command:**
 ```bash
-curl -s -D - -H 'If-None-Match: "backend-b-v1"' --resolve app.team1.test:8443:10.7.17.151 "https://app.team1.test:8443/api/status"
+curl -s -D - -H 'If-None-Match: "backend-b-v1"' --resolve app.team1.test:8443:10.7.11.31 "https://app.team1.test:8443/api/status"
 ```
 **Output:**
 ```http

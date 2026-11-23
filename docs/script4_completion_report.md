@@ -31,19 +31,19 @@ Both `X-Backend: A` and `X-Backend: B` observed in responses through nginx.
 
 ```nginx
 upstream backend_nodes {
-    server 10.7.16.201:3001;    # Backend A — Mac 3 (Krishiv)
+    server 10.7.28.25:3001;    # Backend A — Mac 3 (Krishiv)
     server 10.7.2.96:3002;   # Backend B — Mac 4 (Vaidehi)
 }
 
 server {
     listen      8080;
-    server_name app.team.test 10.7.17.151;
+    server_name app.team.test 10.7.11.31;
 
     access_log  /opt/homebrew/var/log/nginx/team_access.log;
     error_log   /opt/homebrew/var/log/nginx/team_error.log;
 
     location /health {
-        return 200 '{"edge":"mac2","status":"ok","ip":"10.7.17.151"}';
+        return 200 '{"edge":"mac2","status":"ok","ip":"10.7.11.31"}';
         add_header Content-Type application/json;
     }
 
@@ -70,7 +70,7 @@ server {
 ### Direct backend tests
 
 ```
-curl http://10.7.16.201:3001/api/status
+curl http://10.7.28.25:3001/api/status
 → HTTP 200  X-Backend: A  {"backend": "A", "status": "ok"}
 
 curl http://10.7.2.96:3002/api/status
@@ -80,7 +80,7 @@ curl http://10.7.2.96:3002/api/status
 ### Load balancer test (8 requests via nginx)
 
 ```
-curl -H "Host: app.team.test" http://10.7.17.151:8080/api/status  (×8)
+curl -H "Host: app.team.test" http://10.7.11.31:8080/api/status  (×8)
 
 Request 1 → X-Backend: B  {"backend": "B", "status": "ok"}
 Request 2 → X-Backend: B  {"backend": "B", "status": "ok"}
@@ -97,8 +97,8 @@ Both `X-Backend: A` and `X-Backend: B` confirmed. Round-robin distributing acros
 ### Edge health endpoint
 
 ```
-curl http://10.7.17.151:8080/health
-→ {"edge":"mac2","status":"ok","ip":"10.7.17.151"}
+curl http://10.7.11.31:8080/health
+→ {"edge":"mac2","status":"ok","ip":"10.7.11.31"}
 ```
 
 ---
@@ -140,8 +140,8 @@ tail -f /opt/homebrew/var/log/nginx/team_error.log
 
 | Value | Who Needs It | Value |
 |-------|-------------|-------|
-| HTTP edge URL | P1 (DNS), P3, P4 | `http://10.7.17.151:8080` |
-| Domain → IP | P1 (dnsmasq A record) | `app.team.test → 10.7.17.151` |
+| HTTP edge URL | P1 (DNS), P3, P4 | `http://10.7.11.31:8080` |
+| Domain → IP | P1 (dnsmasq A record) | `app.team.test → 10.7.11.31` |
 | Proxy is working | P3, P4 | Confirmed — both backends reachable via edge |
 
 ---

@@ -1,9 +1,9 @@
-* Added app.team1.test:8443:10.7.17.151 to DNS cache
+* Added app.team1.test:8443:10.7.11.31 to DNS cache
 * Hostname app.team1.test was found in DNS cache
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0*   Trying 10.7.17.151:8443...
-* Connected to app.team1.test (10.7.17.151) port 8443
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0*   Trying 10.7.11.31:8443...
+* Connected to app.team1.test (10.7.11.31) port 8443
 * ALPN: curl offers h2,http/1.1
 * (304) (OUT), TLS handshake, Client hello (1):
 } [319 bytes data]

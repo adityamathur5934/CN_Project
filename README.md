@@ -21,11 +21,11 @@ Client → DNS (Mac 1) → HTTPS Edge/nginx (Mac 2) → Backend A (Mac 3) or Bac
 | Person | Machine | Role | IP |
 |--------|---------|------|----|
 | P1 | Mac 1 | Private DNS Server (dnsmasq) + Test Client | [P1_IP] |
-| **P2 (YOU)** | **Mac 2** | **Edge / nginx / TLS / Load Balancer** | **10.7.17.151** |
+| **P2 (YOU)** | **Mac 2** | **Edge / nginx / TLS / Load Balancer** | **10.7.11.31** |
 | P3 | Mac 3 | Backend A — REST API :3001 | [P3_IP] |
 | P4 | Mac 4 | Backend B + Test Client — REST API :3002 | [P4_IP] |
 
-**Private Domain:** `app.team.test` → resolves to Mac 2 (10.7.17.151)
+**Private Domain:** `app.team.test` → resolves to Mac 2 (10.7.11.31)
 
 ---
 
@@ -149,7 +149,7 @@ These rules apply whenever using an AI agent for this project:
 
 | Value | Who Needs It | When |
 |-------|-------------|------|
-| Mac 2 IP: `10.7.17.151` | P1 (for DNS A record) | Before Script 1 |
+| Mac 2 IP: `10.7.11.31` | P1 (for DNS A record) | Before Script 1 |
 | HTTPS endpoint: `https://app.team.test` | P3, P4 (for integration test) | After Script 5 |
 | nginx load balancer status | Everyone (Phase 1 checkpoint) | After Script 4 |
 

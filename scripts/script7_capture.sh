@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
 # =============================================================================
 # Script 7 — Evidence Capture Helper
-# Project: CN_Project | Machine: Mac 2 (Aditya) — 10.7.17.151
+# Project: CN_Project | Machine: Mac 2 (Aditya) — 10.7.11.31
 # Domain:  https://app.team1.test
 # =============================================================================
 # WHAT THIS DOES:
@@ -12,9 +12,9 @@
 #
 # PREREQUISITES:
 #   - Wireshark capture already running on en0 (start it BEFORE this script)
-#   - DNS resolves app.team1.test → 10.7.17.151  (Mac 1 dnsmasq)
+#   - DNS resolves app.team1.test → 10.7.11.31  (Mac 1 dnsmasq)
 #   - nginx serving HTTPS on 443 with self-signed cert in configs/tls/
-#   - Backend A (10.7.16.201:3001) and Backend B (10.7.2.96:3002) are up
+#   - Backend A (10.7.28.25:3001) and Backend B (10.7.2.96:3002) are up
 #
 # RUN:
 #   chmod +x scripts/script7_capture.sh
@@ -64,7 +64,7 @@ VERBOSE_OUT="${OUTDIR}/verbose_single_${TIMESTAMP}.txt"
 
 curl -v \
   --cacert "${CERT}" \
-  --resolve "${DOMAIN}:8443:10.7.17.151" \
+  --resolve "${DOMAIN}:8443:10.7.11.31" \
   "${URL}/api/status" \
   2>&1 | tee "${VERBOSE_OUT}"
 
@@ -84,7 +84,7 @@ echo "---------|-----------|-------------|----------" | tee -a "${RR_OUT}"
 for i in {1..8}; do
   RESPONSE=$(curl -sI \
     --cacert "${CERT}" \
-    --resolve "${DOMAIN}:8443:10.7.17.151" \
+    --resolve "${DOMAIN}:8443:10.7.11.31" \
     "${URL}/api/status" 2>&1)
 
   BACKEND=$(echo "${RESPONSE}" | grep -i "x-backend:" | tr -d '\r' | awk '{print $2}')
@@ -106,7 +106,7 @@ echo "--- [4/4] Direct backend health checks (no TLS, direct IP) ---"
 DIRECT_OUT="${OUTDIR}/direct_backends_${TIMESTAMP}.txt"
 
 echo "=== Backend A direct ===" | tee "${DIRECT_OUT}"
-curl -sv http://10.7.16.201:3001/api/status 2>&1 | tee -a "${DIRECT_OUT}" || \
+curl -sv http://10.7.28.25:3001/api/status 2>&1 | tee -a "${DIRECT_OUT}" || \
   echo "Backend A unreachable" | tee -a "${DIRECT_OUT}"
 
 echo "" | tee -a "${DIRECT_OUT}"

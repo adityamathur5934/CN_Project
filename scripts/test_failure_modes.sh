@@ -7,12 +7,12 @@
 # =============================================================================
 
 DOMAIN="app.team1.test"
-EDGE_IP="10.7.17.151"
+EDGE_IP="10.7.11.31"
 EDGE_PORT="8443"
 DNS_IP="10.7.15.236"
 BACKEND_B_IP="10.7.16.36"
 BACKEND_B_PORT="3002"
-BACKEND_A_IP="10.7.16.201"
+BACKEND_A_IP="10.7.28.25"
 BACKEND_A_PORT="3001"
 
 GREEN='\033[0;32m'; RED='\033[0;31m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; BOLD='\033[1m'; RESET='\033[0m'

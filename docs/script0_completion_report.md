@@ -22,7 +22,7 @@
 
 ```
 $ ifconfig en0 | grep inet
-inet 10.7.17.151 netmask 0xffffe000 broadcast 10.7.31.255
+inet 10.7.11.31 netmask 0xffffe000 broadcast 10.7.31.255
 
 $ ifconfig en0 | grep ether
 ether a2:24:e2:34:6f:4d
@@ -33,7 +33,7 @@ default  10.7.0.1  UGScg  en0
 
 | Field            | Value               |
 |------------------|---------------------|
-| Private IPv4     | **10.7.17.151**     |
+| Private IPv4     | **10.7.11.31**     |
 | Subnet / Prefix  | 255.255.224.0 / /19 |
 | Network          | 10.7.0.0/19         |
 | Broadcast        | 10.7.31.255         |
@@ -55,7 +55,7 @@ $ arp -n 10.7.0.1
 | Role        | Machine | Person | IPv4            | Service Port | Status          |
 |-------------|---------|--------|-----------------|--------------|-----------------|
 | DNS Server  | Mac 1   | P1     | [FILL IN — P1]  | 53 (UDP/TCP) | ⏳ Need from P1 |
-| Edge/nginx  | Mac 2   | P2     | **10.7.17.151** | 443 / 80     | ✅ Confirmed    |
+| Edge/nginx  | Mac 2   | P2     | **10.7.11.31** | 443 / 80     | ✅ Confirmed    |
 | Backend A   | Mac 3   | P3     | [FILL IN — P3]  | 3001 (TCP)   | ⏳ Need from P3 |
 | Backend B   | Mac 4   | P4     | [FILL IN — P4]  | 3002 (TCP)   | ⏳ Need from P4 |
 
@@ -76,8 +76,8 @@ $ arp -n 10.7.0.1
 
 | Domain          | Resolves To     | Set By |
 |-----------------|-----------------|--------|
-| app.team.test   | 10.7.17.151     | P1 (dnsmasq) |
-| api.team.test   | 10.7.17.151     | P1 (dnsmasq) |
+| app.team.test   | 10.7.11.31     | P1 (dnsmasq) |
+| api.team.test   | 10.7.11.31     | P1 (dnsmasq) |
 
 > **Action required:** Agree with the team on the actual team identifier.
 > Replace `team` with your team name/number (e.g., `team4.test`, `teamA.test`).
@@ -132,7 +132,7 @@ PING 10.7.x.x: 56 data bytes
 |-----------------------------------------------------|-----------------|
 | All 4 Macs connected to same LAN (10.7.0.0/19)     | ⏳ Verify with team |
 | All 4 private IPv4 addresses recorded               | ⏳ Need P1/P3/P4 IPs |
-| Mac 2 IP confirmed: 10.7.17.151                     | ✅ Done         |
+| Mac 2 IP confirmed: 10.7.11.31                     | ✅ Done         |
 | All pairwise pings attempted (Mac2↔Mac1/3/4)        | ⏳ Pending IPs  |
 | Domain name agreed (.test namespace)                | ⏳ Confirm with team |
 | Service ports confirmed (53 / 443 / 3001 / 3002)   | ✅ Plan confirmed |

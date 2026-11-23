@@ -21,12 +21,12 @@ Mac 4 is configured to use `10.7.15.236` as its DNS server. That is Om's Mac 1.
 Mac 4 sends a DNS query over UDP to port 53: "What is the IP address of app.team1.test?"
 
 **Step 3 — Mac 1 / dnsmasq answers.**
-Om's dnsmasq has a record: `app.team1.test → 10.7.17.151`.
-It sends back a DNS response: "The IP is 10.7.17.151."
+Om's dnsmasq has a record: `app.team1.test → 10.7.11.31`.
+It sends back a DNS response: "The IP is 10.7.11.31."
 DNS is now done. It played no further role in this connection.
 
 **Step 4 — Mac 4 opens a TCP connection to Mac 2.**
-Now that Mac 4 knows the IP, it initiates a TCP connection to `10.7.17.151` on port `8443`.
+Now that Mac 4 knows the IP, it initiates a TCP connection to `10.7.11.31` on port `8443`.
 This is the three-way handshake:
 - Mac 4 sends SYN ("I want to connect")
 - Mac 2 / nginx replies SYN-ACK ("I accept")
@@ -49,7 +49,7 @@ No one watching the network can read it. Wireshark shows it only as "Application
 **Step 7 — nginx decrypts and reverse-proxies the request.**
 nginx on Mac 2 terminates TLS — it decrypts the request.
 nginx acts as a reverse proxy: it picks a backend from its upstream pool using round-robin.
-Round 1: it sends the request (as plain HTTP) to Mac 3 at `10.7.16.201:3001` (Backend A).
+Round 1: it sends the request (as plain HTTP) to Mac 3 at `10.7.28.25:3001` (Backend A).
 Round 2: it sends the next request to Mac 4 at `10.7.2.96:3002` (Backend B).
 
 **Step 8 — The backend generates and returns the response.**
@@ -71,7 +71,7 @@ On the network capture, we can see: DNS on UDP/53, TCP handshake on TCP/8443, TL
 
 | Concept | Where It Appears in Our Project |
 |---|---|
-| DNS | Mac 1 dnsmasq resolves `app.team1.test` to `10.7.17.151` |
+| DNS | Mac 1 dnsmasq resolves `app.team1.test` to `10.7.11.31` |
 | IP Addressing | Every machine has a private IPv4 on 10.7.0.0/19 |
 | Subnet | All four Macs are on 10.7.0.0/19 — same broadcast domain |
 | Gateway | 10.7.0.1 — used when traffic needs to leave the LAN |
@@ -93,8 +93,8 @@ On the network capture, we can see: DNS on UDP/53, TCP handshake on TCP/8443, TL
 | Machine | Person | Role | IP | Port | Service |
 |---|---|---|---|---|---|
 | Mac 1 | Om | Private DNS Server + Test Client | 10.7.15.236 | 53/UDP | dnsmasq |
-| Mac 2 | Aditya | Edge / Reverse Proxy / Load Balancer | 10.7.17.151 | 8443/TCP (HTTPS), 8080/TCP (HTTP→redirect) | nginx |
-| Mac 3 | Krishiv | Backend Server A | 10.7.16.201 | 3001/TCP | Python HTTP server |
+| Mac 2 | Aditya | Edge / Reverse Proxy / Load Balancer | 10.7.11.31 | 8443/TCP (HTTPS), 8080/TCP (HTTP→redirect) | nginx |
+| Mac 3 | Krishiv | Backend Server A | 10.7.28.25 | 3001/TCP | Python HTTP server |
 | Mac 4 | Vaidehi | Backend Server B + Test Client | 10.7.2.96 | 3002/TCP | Python HTTP server |
 
 **Network:** 10.7.0.0/19 | **Subnet mask:** 255.255.224.0 | **Gateway:** 10.7.0.1 | **Domain:** `app.team1.test`
@@ -108,16 +108,16 @@ On the network capture, we can see: DNS on UDP/53, TCP handshake on TCP/8443, TL
 | Stage | Protocol | Source | Destination | Port | What Happens |
 |---|---|---|---|---|---|
 | 1. DNS Query | DNS / UDP | Mac 4 (10.7.2.96) | Mac 1 (10.7.15.236) | 53/UDP | Client asks: "What is app.team1.test?" |
-| 2. DNS Response | DNS / UDP | Mac 1 (10.7.15.236) | Mac 4 (10.7.2.96) | 53/UDP | dnsmasq answers: "10.7.17.151" |
-| 3. TCP SYN | TCP | Mac 4 (ephemeral port) | Mac 2 (10.7.17.151) | 8443/TCP | Client initiates connection |
-| 4. TCP SYN-ACK | TCP | Mac 2 (10.7.17.151) | Mac 4 (ephemeral port) | 8443/TCP | nginx accepts connection |
-| 5. TCP ACK | TCP | Mac 4 (ephemeral port) | Mac 2 (10.7.17.151) | 8443/TCP | Handshake complete |
+| 2. DNS Response | DNS / UDP | Mac 1 (10.7.15.236) | Mac 4 (10.7.2.96) | 53/UDP | dnsmasq answers: "10.7.11.31" |
+| 3. TCP SYN | TCP | Mac 4 (ephemeral port) | Mac 2 (10.7.11.31) | 8443/TCP | Client initiates connection |
+| 4. TCP SYN-ACK | TCP | Mac 2 (10.7.11.31) | Mac 4 (ephemeral port) | 8443/TCP | nginx accepts connection |
+| 5. TCP ACK | TCP | Mac 4 (ephemeral port) | Mac 2 (10.7.11.31) | 8443/TCP | Handshake complete |
 | 6. TLS ClientHello | TLS | Mac 4 | Mac 2 | 8443/TCP | Client advertises TLS versions, ciphers, SNI=app.team1.test |
 | 7. TLS ServerHello + Cert | TLS | Mac 2 | Mac 4 | 8443/TCP | nginx selects TLS 1.3, sends team1.test.crt |
 | 8. TLS Key Exchange + Finished | TLS | Both | Both | 8443/TCP | Shared key derived; encrypted channel open |
 | 9. HTTPS Request | TLS App Data | Mac 4 | Mac 2 | 8443/TCP | Encrypted GET /api/status (invisible to Wireshark) |
-| 10. nginx → Backend A | HTTP | Mac 2 (10.7.17.151) | Mac 3 (10.7.16.201) | 3001/TCP | Plain HTTP proxy request (internal) |
-| 11. Backend A → nginx | HTTP | Mac 3 (10.7.16.201) | Mac 2 (10.7.17.151) | 3001/TCP | {"backend":"A","status":"ok"} + headers |
+| 10. nginx → Backend A | HTTP | Mac 2 (10.7.11.31) | Mac 3 (10.7.28.25) | 3001/TCP | Plain HTTP proxy request (internal) |
+| 11. Backend A → nginx | HTTP | Mac 3 (10.7.28.25) | Mac 2 (10.7.11.31) | 3001/TCP | {"backend":"A","status":"ok"} + headers |
 | 12. HTTPS Response | TLS App Data | Mac 2 | Mac 4 | 8443/TCP | Encrypted response returned to client |
 
 ---
@@ -213,7 +213,7 @@ Om runs our private DNS server using a tool called dnsmasq.
 His machine is the directory service for our network —
 it is the only thing on this LAN that knows what app.team1.test means.
 
-Mac 2 belongs to Aditya. His IP is 10.7.17.151.
+Mac 2 belongs to Aditya. His IP is 10.7.11.31.
 Aditya runs nginx — our edge server.
 nginx does three things simultaneously:
 it terminates TLS so all HTTPS traffic is decrypted here,
@@ -221,7 +221,7 @@ it acts as a reverse proxy forwarding requests to the backends,
 and it load-balances across two backend servers using round-robin.
 This is the only machine the outside world ever talks to directly.
 
-Mac 3 belongs to Krishiv. His IP is 10.7.16.201.
+Mac 3 belongs to Krishiv. His IP is 10.7.28.25.
 Krishiv runs Backend A — a lightweight HTTP REST server on port 3001.
 It returns JSON and identifies itself with the header X-Backend: A.
 
@@ -235,11 +235,11 @@ The subnet mask is 255.255.224.0 and the gateway is 10.7.0.1.
 The request flow works like this.
 A client types app.team1.test.
 The client does not know what IP that is — so it first asks Om's DNS server.
-Om's dnsmasq replies: that name maps to 10.7.17.151 — Aditya's machine.
+Om's dnsmasq replies: that name maps to 10.7.11.31 — Aditya's machine.
 The client then creates a TCP connection to Aditya's machine on port 8443.
 A TLS handshake happens — the connection becomes encrypted.
 nginx on Aditya's machine receives the decrypted HTTP request.
-nginx picks a backend — either Krishiv's Backend A at 10.7.16.201:3001
+nginx picks a backend — either Krishiv's Backend A at 10.7.28.25:3001
 or my Backend B at 10.7.2.96:3002 — and forwards the request.
 The backend responds, nginx passes the response back to the client,
 and the client sees a JSON reply over HTTPS.
@@ -329,25 +329,25 @@ ping -c 3 10.7.15.236
 
 [ACTION: Type:]
 ```
-ping -c 3 10.7.17.151
+ping -c 3 10.7.11.31
 ```
 [EXPECTED OUTPUT:]
 ```
 3 packets transmitted, 3 packets received, 0.0% packet loss
 ```
 
-10.7.17.151 — that is Aditya's Mac 2, our nginx edge. Reachable.
+10.7.11.31 — that is Aditya's Mac 2, our nginx edge. Reachable.
 
 [ACTION: Type:]
 ```
-ping -c 3 10.7.16.201
+ping -c 3 10.7.28.25
 ```
 [EXPECTED OUTPUT:]
 ```
 3 packets transmitted, 3 packets received, 0.0% packet loss
 ```
 
-10.7.16.201 — that is Krishiv's Mac 3, Backend A. Reachable.
+10.7.28.25 — that is Krishiv's Mac 3, Backend A. Reachable.
 
 All three pings succeeded. All four machines are on the same LAN and can communicate at the IP layer.
 This is Layer 3 connectivity — no DNS, no TCP, no TLS involved yet.
@@ -432,10 +432,10 @@ dig app.team1.test +short
 ```
 [EXPECTED OUTPUT:]
 ```
-10.7.17.151
+10.7.11.31
 ```
 
-"app.team1.test resolved to 10.7.17.151. That is Aditya's Mac 2 — our nginx edge.
+"app.team1.test resolved to 10.7.11.31. That is Aditya's Mac 2 — our nginx edge.
 The resolution came from Om's private dnsmasq. This domain does not exist on any public DNS server.
 
 To prove that, let me query Google's public DNS instead."
@@ -451,7 +451,7 @@ It only exists in our private dnsmasq configuration on Om's Mac 1.
 
 Now I want to be precise about something important.
 DNS only answered the question: where is app.team1.test?
-It told us: go to 10.7.17.151.
+It told us: go to 10.7.11.31.
 DNS is now completely finished. It plays no further role in this request.
 The actual TCP connection, TLS handshake, and HTTP exchange
 happen directly between my Mac and Aditya's Mac — DNS is not involved in any of that.
@@ -474,7 +474,7 @@ Q: What is dnsmasq and why did you choose it?
 A: dnsmasq is a lightweight DNS forwarder and DHCP server. It is easy to configure on macOS, supports custom A records for private domains, and needs only a simple config file. It is the standard recommendation for this kind of project.
 
 Q: What is an A record in DNS?
-A: An A record maps a domain name to an IPv4 address. Our dnsmasq config has: address=/app.team1.test/10.7.17.151 — that is the A record saying app.team1.test is at 10.7.17.151.
+A: An A record maps a domain name to an IPv4 address. Our dnsmasq config has: address=/app.team1.test/10.7.11.31 — that is the A record saying app.team1.test is at 10.7.11.31.
 
 Q: What would happen if Om's dnsmasq was not running when we make this request?
 A: The dig query would fail — it would return SERVFAIL or time out. Then when the browser tries to open https://app.team1.test, it would show "Server not found" — not because the server is down, but because the client cannot find the IP. DNS failure stops everything before TCP even begins.
@@ -558,7 +558,7 @@ The Server header says nginx — that is Aditya's Mac 2 responding.
 I am not directly talking to a backend. My entire conversation is with nginx.
 
 X-Backend tells us which backend actually handled this request behind nginx.
-Right now it says A — that is Krishiv's machine at 10.7.16.201:3001.
+Right now it says A — that is Krishiv's machine at 10.7.28.25:3001.
 
 Cache-Control: max-age=60 tells any client that this response is fresh for 60 seconds.
 I will demonstrate caching in more detail shortly.
@@ -587,8 +587,8 @@ That is why there is no certificate warning — it is genuinely trusted, not byp
 Let me now walk through what happened in this single command.
 
 First, my Mac sent a DNS query to Om's machine to resolve app.team1.test.
-Om's dnsmasq replied with 10.7.17.151.
-My Mac then opened a TCP connection to 10.7.17.151 on port 8443 — three-way handshake.
+Om's dnsmasq replied with 10.7.11.31.
+My Mac then opened a TCP connection to 10.7.11.31 on port 8443 — three-way handshake.
 Then TLS negotiation began: ClientHello, ServerHello, Certificate, key exchange, Finished.
 Then my encrypted HTTP GET request travelled through the TLS tunnel to nginx.
 nginx decrypted it, selected a backend using round-robin, forwarded the request as plain HTTP.
@@ -617,7 +617,7 @@ A: HTTP is plaintext — anyone on the network can read the headers and body. HT
 If curl times out (exit code 28):
 - Check nginx is running: `brew services list | grep nginx` on Aditya's Mac
 - Test nginx locally: `curl -sk https://127.0.0.1:8443/health` on Mac 2
-- Check backends are up: `curl -s http://10.7.16.201:3001/api/status` and `curl -s http://10.7.2.96:3002/api/status`
+- Check backends are up: `curl -s http://10.7.28.25:3001/api/status` and `curl -s http://10.7.2.96:3002/api/status`
 
 If `curl: (60) SSL certificate problem: self signed certificate`:
 - The cert is not trusted on Mac 4 — run: `sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain /path/to/team1.test.crt`
@@ -676,7 +676,7 @@ Request 8: {"backend": "B", "status": "ok"}
 ```
 
 "You can see the responses alternating between Backend A and Backend B.
-Backend A is Krishiv's machine at 10.7.16.201:3001.
+Backend A is Krishiv's machine at 10.7.28.25:3001.
 Backend B is my machine at 10.7.2.96:3002.
 
 Every single request went to the same domain — app.team1.test.
@@ -712,10 +712,10 @@ Q: What is round-robin load balancing?
 A: Round-robin distributes requests sequentially across all available backends in order. Request 1 goes to Backend A, request 2 to Backend B, request 3 back to A, and so on. It assumes all backends have equal capacity and treats every request as equal weight.
 
 Q: What is the nginx upstream block?
-A: The upstream block in nginx defines a pool of backend servers. In our config it is: upstream backend_nodes { server 10.7.16.201:3001; server 10.7.2.96:3002; }. nginx round-robins across these by default.
+A: The upstream block in nginx defines a pool of backend servers. In our config it is: upstream backend_nodes { server 10.7.28.25:3001; server 10.7.2.96:3002; }. nginx round-robins across these by default.
 
 Q: How does the client not know it is talking to two different backends?
-A: Because the client only ever connects to nginx at 10.7.17.151:8443. nginx makes a separate internal connection to whichever backend it chooses. The client never sees the backend IPs. This is the reverse proxy pattern.
+A: Because the client only ever connects to nginx at 10.7.11.31:8443. nginx makes a separate internal connection to whichever backend it chooses. The client never sees the backend IPs. This is the reverse proxy pattern.
 
 Q: What would happen if we used least_conn instead of round-robin?
 A: With least_conn, nginx would send each new request to whichever backend currently has the fewest active connections. This is better when requests have unequal processing times. Round-robin works well when requests are roughly equal in cost.
@@ -725,7 +725,7 @@ A: nginx's round-robin is connection-based. If curl reuses a keep-alive connecti
 
 ### FAILURE / RECOVERY
 If all responses show only A or only B:
-- One backend is down. Check both: `curl -s http://10.7.16.201:3001/api/status` and `curl -s http://10.7.2.96:3002/api/status`
+- One backend is down. Check both: `curl -s http://10.7.28.25:3001/api/status` and `curl -s http://10.7.2.96:3002/api/status`
 - Restart whichever is down before continuing
 If responses show `502 Bad Gateway`:
 - Both backends are down. Start both before continuing.
@@ -785,14 +785,14 @@ The client is asking: what is the IP address of app.team1.test?
 
 The second packet is the DNS response from Om's dnsmasq.
 It comes back from 10.7.15.236 to the client.
-The answer section says: app.team1.test has address 10.7.17.151.
+The answer section says: app.team1.test has address 10.7.11.31.
 
 Notice the protocol is UDP. DNS almost always uses UDP because it is fast and the messages are small.
 Port 53 is the standard DNS port.
 
 This entire DNS exchange happened before any TCP connection was made.
 DNS is purely a lookup. It does not establish a connection.
-It just tells the client: go to 10.7.17.151.
+It just tells the client: go to 10.7.11.31.
 
 ---
 
@@ -805,7 +805,7 @@ Aditya, please filter: tcp.port == 8443
 Now you can see the TCP handshake — three packets in sequence.
 
 The first packet has the SYN flag set. The source is the client — Mac 4.
-The destination is 10.7.17.151 port 8443 — that is Aditya's nginx.
+The destination is 10.7.11.31 port 8443 — that is Aditya's nginx.
 The client is saying: I want to establish a connection.
 Notice the source port is a high ephemeral number — something like 54321.
 This is a randomly assigned port chosen by the client's operating system.
@@ -1036,7 +1036,7 @@ A: No. nginx's proxy_cache directive is not configured in our setup. nginx acts 
 If the 304 response does not appear and you get 200 instead:
 - The request may have hit Backend B (ETag is `"backend-b-v1"` on Backend B, not `"72db076608216f33"`)
 - Force the request to Backend A by running several requests until X-Backend: A appears, note the ETag, then use that ETag in the If-None-Match header
-- Alternatively use the Backend A ETag directly: `curl -sI -H 'If-None-Match: "72db076608216f33"' http://10.7.16.201:3001/api/status` (direct to Backend A)
+- Alternatively use the Backend A ETag directly: `curl -sI -H 'If-None-Match: "72db076608216f33"' http://10.7.28.25:3001/api/status` (direct to Backend A)
 
 ---
 
@@ -1118,7 +1118,7 @@ DNS is still working. nginx is still working. TLS is still working.
 Backend A is unreachable — but the service never interrupted.
 
 Here is exactly what happened.
-nginx tried to forward the request to Backend A at 10.7.16.201:3001.
+nginx tried to forward the request to Backend A at 10.7.28.25:3001.
 The TCP connection attempt timed out or was refused because nothing was listening on that port.
 nginx then marked Backend A as temporarily unavailable and sent the request to Backend B instead.
 The client received a successful 200 response and never saw any error.
@@ -1165,7 +1165,7 @@ Q: If both backends fail, what does the client see?
 A: The client gets a 502 Bad Gateway response from nginx. nginx is still alive and accepting connections, but it has no healthy backends to forward to. DNS and TCP to nginx still work — the failure is at the application layer upstream from nginx.
 
 Q: What is a single point of failure in our current setup?
-A: nginx on Mac 2. If Aditya's machine goes down, the entire service goes down regardless of whether the backends are healthy. DNS would still resolve app.team1.test but the TCP connection to 10.7.17.151 would fail. Phase 2 Extension E addresses this with a standby nginx and DNS-based cutover.
+A: nginx on Mac 2. If Aditya's machine goes down, the entire service goes down regardless of whether the backends are healthy. DNS would still resolve app.team1.test but the TCP connection to 10.7.11.31 would fail. Phase 2 Extension E addresses this with a standby nginx and DNS-based cutover.
 
 Q: What layer did this failure occur at?
 A: Application layer — Layer 7. DNS resolved correctly. TCP from the client to nginx succeeded. TLS succeeded. The failure was nginx-to-backend — the connection from nginx to Backend A on port 3001 was refused.
@@ -1176,7 +1176,7 @@ A: proxy_connect_timeout is how long nginx waits for a backend to accept a TCP c
 ### FAILURE / RECOVERY
 If after stopping Backend A, requests still show X-Backend: A:
 - nginx may have cached the upstream connection briefly. Wait a few seconds and retry.
-- If Backend A is confirmed stopped (`curl -s http://10.7.16.201:3001/api/status` fails) but nginx still serves A, the proxy_connect_timeout may not have fired yet. Wait for it.
+- If Backend A is confirmed stopped (`curl -s http://10.7.28.25:3001/api/status` fails) but nginx still serves A, the proxy_connect_timeout may not have fired yet. Wait for it.
 If restarting Backend A and no requests go to A after 10 seconds:
 - nginx may be in a cooldown window. Reload nginx: `nginx -s reload` on Mac 2.
 
@@ -1235,11 +1235,11 @@ Backend firewall isolation: currently, any machine on our LAN can directly reach
 port 3001 on Krishiv's machine or port 3002 on mine.
 In a production system, backends should only accept connections from the load balancer.
 We would use macOS pf firewall rules to block direct client access to 3001 and 3002,
-while allowing nginx at 10.7.17.151 through.
+while allowing nginx at 10.7.11.31 through.
 
 Standby nginx: currently Mac 2 is a single point of failure.
 The standby extension puts a second nginx on another Mac,
-then changes the DNS record for app.team1.test from 10.7.17.151 to the standby IP.
+then changes the DNS record for app.team1.test from 10.7.11.31 to the standby IP.
 Clients with cached DNS still hit the old edge briefly,
 then new lookups go to the standby. This demonstrates DNS-based cutover."
 
@@ -1252,7 +1252,7 @@ Q: What is the difference between DNS failover and TCP failover?
 A: DNS failover works at the resolution layer — you change which IP a domain name points to, and after the TTL expires, new clients go to the new server. TCP failover works at the connection layer — nginx detects a failed backend and reroutes the current request without any DNS change. DNS failover changes WHERE clients connect. TCP failover (nginx) changes where requests go once they reach the edge.
 
 Q: What is pf and what would the firewall rule look like?
-A: pf is macOS's built-in packet filter firewall. A rule to block direct access to port 3001 except from nginx would look like: pass in on en0 proto tcp from 10.7.17.151 to any port 3001. Then: block in on en0 proto tcp from any to any port 3001. This allows Mac 2 through and blocks everything else.
+A: pf is macOS's built-in packet filter firewall. A rule to block direct access to port 3001 except from nginx would look like: pass in on en0 proto tcp from 10.7.11.31 to any port 3001. Then: block in on en0 proto tcp from any to any port 3001. This allows Mac 2 through and blocks everything else.
 
 Q: What is a single point of failure?
 A: A component whose failure causes the entire system to fail, with no redundancy or failover path. In our current setup, nginx on Mac 2 is a single point of failure. If Mac 2 goes down, no requests can be served — even if both backends are healthy.
@@ -1295,7 +1295,7 @@ Step 1 — DNS check."
 ```
 dig app.team1.test +short
 ```
-[IF THIS RETURNS 10.7.17.151:] "DNS is working. We move to Step 2."
+[IF THIS RETURNS 10.7.11.31:] "DNS is working. We move to Step 2."
 [IF THIS RETURNS NOTHING OR WRONG IP:] "DNS is broken. We investigate Mac 1 — dnsmasq may have stopped or the record may have been changed."
 
 ```
@@ -1308,11 +1308,11 @@ pgrep -fl dnsmasq
 
 [ACTION: Type:]
 ```
-nc -zv 10.7.17.151 8443
+nc -zv 10.7.11.31 8443
 ```
 [EXPECTED OUTPUT IF WORKING:]
 ```
-Connection to 10.7.17.151 port 8443 [tcp/*] succeeded!
+Connection to 10.7.11.31 port 8443 [tcp/*] succeeded!
 ```
 [IF FAILS:] "TCP to port 8443 is failing. Either nginx is down on Mac 2 or there is a firewall blocking the port."
 ```
@@ -1348,7 +1348,7 @@ curl -s https://app.team1.test:8443/api/status
 | Stop nginx on Mac 2 | TCP connection refused to 8443 | TCP | `brew services list` on Mac 2 |
 | Change nginx port | TCP connection refused | TCP | `lsof -i :8443` on Mac 2 |
 | Replace/corrupt TLS cert | SSL certificate error in curl | TLS | `nginx -t` on Mac 2 |
-| Stop both backends | 502 Bad Gateway | Application | `curl http://10.7.16.201:3001/api/status` |
+| Stop both backends | 502 Bad Gateway | Application | `curl http://10.7.28.25:3001/api/status` |
 | Change backend port in nginx config | 502 Bad Gateway | Application | Check nginx upstream block on Mac 2 |
 | Add wrong IP to nginx upstream | Some requests get 502 | Application | Check `upstream backend_nodes` in team.conf |
 
@@ -1419,7 +1419,7 @@ We are ready for individual viva questions."
 - **Protocol:** UDP (primarily), TCP for large responses
 - **Port:** 53
 - **Our setup:** dnsmasq on Om's Mac 1 at 10.7.15.236
-- **Record type:** A record — `address=/app.team1.test/10.7.17.151`
+- **Record type:** A record — `address=/app.team1.test/10.7.11.31`
 - **When it runs:** Before any TCP connection. Once. Then TCP takes over.
 - **What it does NOT do:** DNS does not make connections. It does not proxy traffic. It only answers name→IP lookups.
 
@@ -1462,7 +1462,7 @@ We are ready for individual viva questions."
   - Load-balances using round-robin
   - Rewrites HTTP → HTTPS (port 8080 redirects to 8443)
 - **Config file location:** `/opt/homebrew/etc/nginx/servers/team.conf`
-- **Upstream block:** `server 10.7.16.201:3001;` and `server 10.7.2.96:3002;`
+- **Upstream block:** `server 10.7.28.25:3001;` and `server 10.7.2.96:3002;`
 - **Health check:** Passive — marks backend failed after connection refused, restores automatically
 
 ## Load Balancing
@@ -1497,9 +1497,9 @@ dig app.team1.test +short
 
 | Result | Meaning | Next Step |
 |---|---|---|
-| `10.7.17.151` | DNS working correctly | Proceed to Check 2 |
+| `10.7.11.31` | DNS working correctly | Proceed to Check 2 |
 | Empty / no output | dnsmasq not running or client not using Mac 1 DNS | Fix DNS first |
-| Wrong IP (not 10.7.17.151) | DNS record changed or corrupted | Fix dnsmasq.conf on Mac 1 |
+| Wrong IP (not 10.7.11.31) | DNS record changed or corrupted | Fix dnsmasq.conf on Mac 1 |
 | `SERVFAIL` | dnsmasq is running but has a config error | Check dnsmasq.conf syntax |
 
 **If DNS fails — checks to run:**
@@ -1523,7 +1523,7 @@ dig app.team1.test @10.7.15.236 +short
 
 **Command:**
 ```bash
-nc -zv 10.7.17.151 8443
+nc -zv 10.7.11.31 8443
 ```
 
 | Result | Meaning | Next Step |
@@ -1541,7 +1541,7 @@ brew services list | grep nginx
 brew services restart nginx
 
 # On Mac 4 — can we ping Mac 2 at all?
-ping -c 3 10.7.17.151
+ping -c 3 10.7.11.31
 # If ping fails → LAN connectivity issue, not nginx
 ```
 
@@ -1594,7 +1594,7 @@ curl -s https://app.team1.test:8443/api/status
 **If Application fails — checks to run:**
 ```bash
 # Test Backend A directly (from any Mac on LAN):
-curl -s http://10.7.16.201:3001/api/status
+curl -s http://10.7.28.25:3001/api/status
 
 # Test Backend B directly:
 curl -s http://10.7.2.96:3002/api/status
@@ -1628,7 +1628,7 @@ It does not replace Phase 1 — it builds on top of it.
 ## Extension B — DNS TTL and Controlled Record Change (Om's task)
 
 **What it adds:** Set a short TTL (e.g. 30 seconds) in dnsmasq.
-**In dnsmasq.conf:** `address=/app.team1.test/10.7.17.151` with `--local-ttl=30`
+**In dnsmasq.conf:** `address=/app.team1.test/10.7.11.31` with `--local-ttl=30`
 **How to demonstrate:**
 1. Resolve the name — client caches the answer for 30 seconds
 2. Change the record to a different IP
@@ -1642,7 +1642,7 @@ It does not replace Phase 1 — it builds on top of it.
 **What it adds:** pf firewall rules on Mac 3 and Mac 4 that block direct access to ports 3001/3002 from anyone except Mac 2 (nginx).
 **What it proves:** Backends are not directly accessible to clients. They can only be reached through the load balancer.
 **How to demonstrate:**
-- From Mac 4: `curl http://10.7.16.201:3001/api/status` → blocked/timed out
+- From Mac 4: `curl http://10.7.28.25:3001/api/status` → blocked/timed out
 - From Mac 2: same command → succeeds (nginx can still reach it)
 
 ## Extension D — HA Failover (✅ ALREADY DEMONSTRATED in Step 8)
@@ -1676,16 +1676,16 @@ It does not replace Phase 1 — it builds on top of it.
 ## Phase 1 Viva Questions — Om
 
 **Q1: What is DNS and what does it do in your project?**
-A: DNS stands for Domain Name System. It is a directory service that converts a human-readable name — like app.team1.test — into an IP address. In our project, when a client wants to reach the service, it first asks my Mac what IP app.team1.test points to. My dnsmasq server replies with 10.7.17.151, which is Aditya's nginx machine. DNS is done after that — it plays no role in the actual connection.
+A: DNS stands for Domain Name System. It is a directory service that converts a human-readable name — like app.team1.test — into an IP address. In our project, when a client wants to reach the service, it first asks my Mac what IP app.team1.test points to. My dnsmasq server replies with 10.7.11.31, which is Aditya's nginx machine. DNS is done after that — it plays no role in the actual connection.
 
 **Q2: What is dnsmasq and why did you use it?**
 A: dnsmasq is a lightweight DNS forwarder and DHCP server. We used it because it is easy to configure on macOS, supports custom A records for private domains, and runs with a simple config file. You define your records with the `address=` directive. It is the standard tool for this kind of local DNS setup.
 
 **Q3: What does your dnsmasq.conf contain?**
-A: It has four key lines. `port=53` sets it to listen on the standard DNS port. `listen-address=127.0.0.1,10.7.15.236` makes it bind to the loopback and my LAN interface. `bind-interfaces` stops it from accidentally listening on other interfaces. And `address=/app.team1.test/10.7.17.151` is the A record that maps our domain to Aditya's nginx machine.
+A: It has four key lines. `port=53` sets it to listen on the standard DNS port. `listen-address=127.0.0.1,10.7.15.236` makes it bind to the loopback and my LAN interface. `bind-interfaces` stops it from accidentally listening on other interfaces. And `address=/app.team1.test/10.7.11.31` is the A record that maps our domain to Aditya's nginx machine.
 
 **Q4: What is an A record?**
-A: An A record is a DNS record type that maps a domain name to an IPv4 address. In our dnsmasq config, `address=/app.team1.test/10.7.17.151` is our A record. When a client queries for app.team1.test, dnsmasq returns 10.7.17.151 as the answer.
+A: An A record is a DNS record type that maps a domain name to an IPv4 address. In our dnsmasq config, `address=/app.team1.test/10.7.11.31` is our A record. When a client queries for app.team1.test, dnsmasq returns 10.7.11.31 as the answer.
 
 **Q5: What port does DNS use and which transport protocol?**
 A: DNS uses port 53. It primarily uses UDP because DNS messages are small and UDP is fast. For larger responses that exceed 512 bytes, DNS falls back to TCP on port 53. In our project, dnsmasq handles both. Zone transfers between DNS servers also use TCP.
@@ -1715,7 +1715,7 @@ A: In recursive resolution, the client asks one DNS server which goes and finds 
 A: When a DNS resolver returns an answer, it includes a TTL — Time To Live — in seconds. The client caches the answer for that many seconds. If the same domain is queried again within that window, the client uses the cached answer without contacting the DNS server. After the TTL expires, the client must query again. A short TTL like 30 seconds means changes propagate quickly. A long TTL like 3600 seconds means less DNS traffic but slower propagation.
 
 **Q14: What is nslookup and how is it different from dig?**
-A: Both are DNS query tools. nslookup is older, simpler, and available on most systems. dig gives more detailed output — it shows the full DNS response including TTL, response flags, query time, and the server that answered. For debugging, dig is preferred. For a quick check, nslookup works fine. Both would confirm that app.team1.test resolves to 10.7.17.151 via my dnsmasq.
+A: Both are DNS query tools. nslookup is older, simpler, and available on most systems. dig gives more detailed output — it shows the full DNS response including TTL, response flags, query time, and the server that answered. For debugging, dig is preferred. For a quick check, nslookup works fine. Both would confirm that app.team1.test resolves to 10.7.11.31 via my dnsmasq.
 
 **Q15: What is the relationship between DNS and nginx in your project? Is nginx a DNS server?**
 A: No, nginx is not a DNS server. They are completely separate components at different layers. DNS runs at the application layer on UDP port 53 and only answers name-to-IP questions. nginx runs at the application layer on TCP port 8443 and handles HTTP/HTTPS proxying. DNS tells the client WHERE to connect. nginx decides what to do with the request AFTER the client connects. They never communicate with each other directly.
@@ -1728,7 +1728,7 @@ A: No, nginx is not a DNS server. They are completely separate components at dif
 A: Right now, my Mac 1 is the only DNS server. If my machine goes down, no client can resolve app.team1.test and the entire service appears offline — even if nginx and both backends are perfectly healthy. A backup DNS server is a second machine running dnsmasq with the same records. Clients list both DNS servers. If primary fails, the OS automatically tries the backup. This removes DNS as a single point of failure.
 
 **Q17: How would you configure backup DNS on macOS?**
-A: I would install dnsmasq on another Mac — say Mac 4 — with the same dnsmasq.conf records pointing app.team1.test to 10.7.17.151. Then on all client Macs I would add both IPs in System Settings → DNS: primary 10.7.15.236, secondary 10.7.2.96. If primary doesn't respond within a timeout, the OS automatically queries the secondary.
+A: I would install dnsmasq on another Mac — say Mac 4 — with the same dnsmasq.conf records pointing app.team1.test to 10.7.11.31. Then on all client Macs I would add both IPs in System Settings → DNS: primary 10.7.15.236, secondary 10.7.2.96. If primary doesn't respond within a timeout, the OS automatically queries the secondary.
 
 **Q18: What is DNS TTL and how would you demonstrate it?**
 A: I add `--local-ttl=30` to dnsmasq to set a 30-second TTL. First I resolve app.team1.test — the client caches the answer. Then I change the record to point to a different IP and restart dnsmasq. Within 30 seconds the client still gets the old answer from cache. After 30 seconds, or after manually flushing with `sudo dscacheutil -flushcache && sudo killall -HUP mDNSResponder`, the new IP appears.
@@ -1772,7 +1772,7 @@ A: A reverse proxy sits in front of servers and acts on their behalf. Clients co
 A: TLS termination means nginx decrypts the incoming HTTPS connection from the client and communicates with the backends over plain HTTP. The TLS layer ends at nginx. From nginx to Backend A or B, the traffic is unencrypted HTTP on the private LAN. Centralising TLS at the edge means backends do not need certificates or TLS configuration — they stay simple.
 
 **Q4: What is your nginx upstream block and what does it do?**
-A: The upstream block defines the backend pool. In our config: `upstream backend_nodes { server 10.7.16.201:3001; server 10.7.2.96:3002; }`. This tells nginx about the two backends. By default nginx uses round-robin across all servers in the upstream. When a request arrives, nginx picks the next server in the list and forwards it there.
+A: The upstream block defines the backend pool. In our config: `upstream backend_nodes { server 10.7.28.25:3001; server 10.7.2.96:3002; }`. This tells nginx about the two backends. By default nginx uses round-robin across all servers in the upstream. When a request arrives, nginx picks the next server in the list and forwards it there.
 
 **Q5: What is round-robin load balancing?**
 A: Round-robin distributes requests sequentially across all backends in order. Request 1 → Backend A, request 2 → Backend B, request 3 → Backend A, and so on. It assumes equal capacity across backends. It is the default algorithm in nginx and works well when requests are uniform in cost and backends have equal performance.
@@ -1784,7 +1784,7 @@ A: The TLS handshake has five steps. First, ClientHello — the client advertise
 A: SNI stands for Server Name Indication. It is a TLS extension where the client includes the hostname it wants — in our case app.team1.test — inside the ClientHello message, before TLS is fully established. This lets nginx know which certificate to present, because a single nginx instance could serve multiple domains. Without SNI, nginx would not know which cert to use before the TLS session is negotiated.
 
 **Q8: What certificate do you use and how was it created?**
-A: We use a self-signed certificate generated with OpenSSL. The certificate has CN=app.team1.test and SANs including DNS:app.team1.test and IP:10.7.17.151. It uses RSA 2048-bit with SHA-256 and is valid for one year. Because it is self-signed, we installed it manually into the macOS Keychain on each client Mac so that curl and browsers trust it without the -k bypass.
+A: We use a self-signed certificate generated with OpenSSL. The certificate has CN=app.team1.test and SANs including DNS:app.team1.test and IP:10.7.11.31. It uses RSA 2048-bit with SHA-256 and is valid for one year. Because it is self-signed, we installed it manually into the macOS Keychain on each client Mac so that curl and browsers trust it without the -k bypass.
 
 **Q9: What is the difference between HTTP port 8080 and HTTPS port 8443 in your config?**
 A: Port 8080 is our HTTP listener. It serves one purpose: redirect any plain HTTP request to HTTPS with a 301 redirect to port 8443. Port 8443 is our HTTPS listener — it terminates TLS and proxies requests to backends. We use 8080/8443 instead of 80/443 because Homebrew nginx runs without root privileges and macOS requires root to bind below port 1024.
@@ -1812,7 +1812,7 @@ A: `nginx -s reload`. This sends a SIGHUP signal to the nginx master process. Th
 ## Phase 2 / Full System Viva Questions — Aditya
 
 **Q16: What is a single point of failure in your current setup?**
-A: nginx on my Mac 2. If my machine goes down, DNS resolves correctly, backends are healthy, but TCP connections to 10.7.17.151:8443 fail. The entire service becomes unreachable. Phase 2 Extension E addresses this with a standby nginx on another Mac and a DNS record change to point app.team1.test at the standby IP.
+A: nginx on my Mac 2. If my machine goes down, DNS resolves correctly, backends are healthy, but TCP connections to 10.7.11.31:8443 fail. The entire service becomes unreachable. Phase 2 Extension E addresses this with a standby nginx on another Mac and a DNS record change to point app.team1.test at the standby IP.
 
 **Q17: How would you implement backend failover with max_fails in nginx?**
 A: In the upstream block you can add `max_fails=3 fail_timeout=30s` to each server directive. After 3 consecutive failed connection attempts within 30 seconds, nginx marks that backend as unavailable for 30 seconds. After 30 seconds, nginx tries it again. Our current setup uses nginx's default passive behavior which achieves a similar effect.
@@ -1821,7 +1821,7 @@ A: In the upstream block you can add `max_fails=3 fail_timeout=30s` to each serv
 A: Passive health checks — what we use — only detect failures when an actual client request fails to reach the backend. nginx notices the failed connection and stops routing to that backend. Active health checks — an nginx Plus feature — send dedicated periodic probe requests to each backend regardless of traffic, so failures are detected faster. In production you want active health checks for faster failover.
 
 **Q19: What is a standby nginx and how does DNS-based cutover work?**
-A: A standby nginx is a second machine running nginx with the same configuration and certificate. DNS-based cutover means changing the DNS A record for app.team1.test from 10.7.17.151 to the standby IP. After the DNS TTL expires, new DNS lookups resolve to the standby. Clients with cached DNS still reach the old edge until their TTL expires. This demonstrates graceful traffic migration without changing any client configuration.
+A: A standby nginx is a second machine running nginx with the same configuration and certificate. DNS-based cutover means changing the DNS A record for app.team1.test from 10.7.11.31 to the standby IP. After the DNS TTL expires, new DNS lookups resolve to the standby. Clients with cached DNS still reach the old edge until their TTL expires. This demonstrates graceful traffic migration without changing any client configuration.
 
 **Q20: What is keep-alive and does nginx use it?**
 A: HTTP keep-alive allows multiple requests to reuse the same TCP connection instead of opening a new one for each request. This reduces latency from repeated TCP handshakes. nginx supports keep-alive with clients by default and can also use keep-alive to backends with the keepalive directive in the upstream block. In our demo, short curl commands open new connections each time, so keep-alive is not visible.
@@ -1853,7 +1853,7 @@ A: In AWS, our nginx is equivalent to an Application Load Balancer — it termin
 A: Backend A is a lightweight HTTP REST server written in Python using the built-in http.server library. It listens on 0.0.0.0:3001 — binding to all interfaces so it is reachable from the LAN, not just locally. It serves two endpoints: GET / which returns a plain text confirmation, and GET /api/status which returns JSON: {"backend": "A", "status": "ok"}. It also sets X-Backend: A on every response so we can identify which backend served a request.
 
 **Q2: Why did you bind to 0.0.0.0 instead of 127.0.0.1?**
-A: 127.0.0.1 is the loopback address — it only accepts connections from the same machine. If I bound to 127.0.0.1, nginx on Mac 2 could not reach my backend. 0.0.0.0 means listen on all available network interfaces — including the LAN interface en0 at 10.7.16.201. This makes the backend reachable from any machine on the LAN.
+A: 127.0.0.1 is the loopback address — it only accepts connections from the same machine. If I bound to 127.0.0.1, nginx on Mac 2 could not reach my backend. 0.0.0.0 means listen on all available network interfaces — including the LAN interface en0 at 10.7.28.25. This makes the backend reachable from any machine on the LAN.
 
 **Q3: What is HTTP and how does it work?**
 A: HTTP — HyperText Transfer Protocol — is a request-response protocol. The client sends a request with a method, a URL, headers, and optionally a body. The server sends a response with a status code, headers, and a body. In our project, nginx sends HTTP requests to my backend on port 3001, and my backend returns HTTP responses. All of this is plain text — unencrypted — because TLS terminates at nginx.
@@ -1883,32 +1883,32 @@ A: max-age=60 says cache this response and consider it fresh for 60 seconds. no-
 A: An HTTP HEAD request is identical to GET but the server returns only the headers — no body. It is useful for checking if a resource exists or getting metadata without downloading content. RFC 7231 requires that any server implementing GET also support HEAD. We added `do_HEAD` to our server so health check tools and proxies that use HEAD do not get a 501 Not Implemented error.
 
 **Q12: What is a port and what is port 3001?**
-A: A port is a 16-bit number from 0 to 65535 that identifies a specific service or application on a machine. IP addresses identify machines; ports identify services on those machines. Port 3001 is an unprivileged port — above 1024 — that we assigned to Backend A. When nginx connects to 10.7.16.201:3001, it is saying: connect to Krishiv's Mac and talk to the service registered on port 3001.
+A: A port is a 16-bit number from 0 to 65535 that identifies a specific service or application on a machine. IP addresses identify machines; ports identify services on those machines. Port 3001 is an unprivileged port — above 1024 — that we assigned to Backend A. When nginx connects to 10.7.28.25:3001, it is saying: connect to Krishiv's Mac and talk to the service registered on port 3001.
 
 **Q13: What is the difference between TCP and UDP?**
 A: TCP — Transmission Control Protocol — is connection-oriented. It establishes a connection with a three-way handshake, guarantees that packets arrive in order, retransmits lost packets, and provides flow control. HTTP uses TCP. UDP — User Datagram Protocol — is connectionless. It sends packets without establishing a connection, does not guarantee delivery or order, and has lower overhead. DNS uses UDP.
 
 **Q14: What happens if nginx cannot reach your backend?**
-A: nginx tries to connect to 10.7.16.201:3001. If the connection is refused or times out — because my server is not running — nginx marks Backend A as temporarily unavailable after the proxy_connect_timeout fires. Subsequent requests go to Backend B only. nginx periodically retries Backend A and re-adds it to the pool when it responds. The client never sees a 502 as long as Backend B is healthy.
+A: nginx tries to connect to 10.7.28.25:3001. If the connection is refused or times out — because my server is not running — nginx marks Backend A as temporarily unavailable after the proxy_connect_timeout fires. Subsequent requests go to Backend B only. nginx periodically retries Backend A and re-adds it to the pool when it responds. The client never sees a 502 as long as Backend B is healthy.
 
 **Q15: Why does the client never directly contact your backend?**
-A: Because the client only knows about app.team1.test which resolves to Aditya's nginx at 10.7.17.151. My backend IP 10.7.16.201 is only in nginx's upstream config — it is never exposed to clients. This is the reverse proxy pattern. It means my backend can change its IP or port without any client reconfiguration — only nginx needs to be updated.
+A: Because the client only knows about app.team1.test which resolves to Aditya's nginx at 10.7.11.31. My backend IP 10.7.28.25 is only in nginx's upstream config — it is never exposed to clients. This is the reverse proxy pattern. It means my backend can change its IP or port without any client reconfiguration — only nginx needs to be updated.
 
 ---
 
 ## Phase 2 / Full System Viva Questions — Krishiv
 
 **Q16: What is backend firewall isolation and why would you implement it?**
-A: Currently any machine on our LAN can directly reach port 3001 on my Mac. Isolation means adding pf firewall rules that block direct access to port 3001 from all sources except nginx at 10.7.17.151. This enforces that backends are only reachable through the load balancer — clients cannot bypass nginx and talk to backends directly. It improves security and ensures all traffic flows through the intended path.
+A: Currently any machine on our LAN can directly reach port 3001 on my Mac. Isolation means adding pf firewall rules that block direct access to port 3001 from all sources except nginx at 10.7.11.31. This enforces that backends are only reachable through the load balancer — clients cannot bypass nginx and talk to backends directly. It improves security and ensures all traffic flows through the intended path.
 
 **Q17: What is pf and how would you write a rule for port 3001?**
-A: pf is macOS's built-in packet filter firewall. A rule to allow only nginx and block everyone else on port 3001 would be: first `pass in on en0 proto tcp from 10.7.17.151 to any port 3001 keep state` to allow nginx, then `block in on en0 proto tcp from any to any port 3001` to block everything else. Rules are evaluated in order — the first matching rule wins.
+A: pf is macOS's built-in packet filter firewall. A rule to allow only nginx and block everyone else on port 3001 would be: first `pass in on en0 proto tcp from 10.7.11.31 to any port 3001 keep state` to allow nginx, then `block in on en0 proto tcp from any to any port 3001` to block everything else. Rules are evaluated in order — the first matching rule wins.
 
 **Q18: What is the difference between a firewall and a router?**
 A: A router forwards packets between networks based on IP addresses. A firewall filters packets based on rules — it can allow or block based on source IP, destination IP, port, protocol, and connection state. A firewall can run on the same machine as the service it protects. Our pf firewall would run on Mac 3, filtering connections before they reach the Python server.
 
 **Q19: What would happen to the demo if Backend A and Backend B both went down?**
-A: nginx would return 502 Bad Gateway to every client request. DNS would still work — app.team1.test still resolves to 10.7.17.151. The TCP connection from client to nginx would still succeed. TLS would still succeed. But nginx would have no healthy backends to forward to, so it would return 502. The failure is at the application layer — nginx to upstream.
+A: nginx would return 502 Bad Gateway to every client request. DNS would still work — app.team1.test still resolves to 10.7.11.31. The TCP connection from client to nginx would still succeed. TLS would still succeed. But nginx would have no healthy backends to forward to, so it would return 502. The failure is at the application layer — nginx to upstream.
 
 **Q20: What is HTTP/1.1 keep-alive?**
 A: HTTP/1.1 introduced persistent connections by default. After one request-response cycle, the TCP connection stays open for potential reuse. The client can send another request without a new TCP handshake. This reduces latency and overhead. Our backend uses Python's BaseHTTPRequestHandler which supports this. The Connection: keep-alive header signals both sides to maintain the connection.
@@ -1940,7 +1940,7 @@ A: Backend A is equivalent to an application server instance — in AWS an EC2 i
 A: We built a private web service platform on four laptops on the same Wi-Fi. Mac 1 runs a private DNS server so our team domain resolves to the right machine. Mac 2 runs nginx which terminates HTTPS and load-balances traffic. Macs 3 and 4 run simple HTTP backends. A client types app.team1.test, DNS resolves it to Mac 2, a secure HTTPS connection is made, nginx picks either Backend A or B using round-robin, and the response comes back. Wireshark lets us see every step at the packet level.
 
 **Q2: What is the complete flow of a single HTTPS request through your system?**
-A: First, my Mac sends a DNS query to Om's Mac 1 asking for the IP of app.team1.test. dnsmasq replies with 10.7.17.151. My Mac opens a TCP connection to 10.7.17.151:8443 — three-way handshake. Then TLS negotiation: ClientHello, ServerHello, Certificate, key exchange, Finished. Then my encrypted HTTP GET request goes through the TLS tunnel to nginx. nginx decrypts it, picks a backend using round-robin, and sends plain HTTP to that backend. The backend responds. nginx encrypts the response and sends it back to me. I receive the JSON reply over HTTPS.
+A: First, my Mac sends a DNS query to Om's Mac 1 asking for the IP of app.team1.test. dnsmasq replies with 10.7.11.31. My Mac opens a TCP connection to 10.7.11.31:8443 — three-way handshake. Then TLS negotiation: ClientHello, ServerHello, Certificate, key exchange, Finished. Then my encrypted HTTP GET request goes through the TLS tunnel to nginx. nginx decrypts it, picks a backend using round-robin, and sends plain HTTP to that backend. The backend responds. nginx encrypts the response and sends it back to me. I receive the JSON reply over HTTPS.
 
 **Q3: What is your role as a test client?**
 A: As the test client I make all the requests during the demo. My machine represents any end-user connecting to the service. I use curl because it shows headers and response details clearly. I run dig to prove DNS resolution, curl to prove HTTPS works, curl in a loop to prove load balancing, curl with If-None-Match to prove caching, and targeted curl commands during failure tests. I also run Backend B on my machine.
@@ -1979,17 +1979,17 @@ A: An ephemeral port is a temporary port that the OS assigns to the client side 
 A: Because TLS encrypts the entire HTTP layer — method, URL, headers, and body. After the TLS handshake establishes a shared session key, every byte of HTTP data is encrypted using that key. Wireshark can see the IP and TCP headers because those are in plaintext — they are needed for network routing. But everything inside the TLS record is ciphertext. Only nginx and my machine have the session key to decrypt it.
 
 **Q15: What is the purpose of the `--resolve` flag in curl?**
-A: `--resolve app.team1.test:8443:10.7.17.151` tells curl to use a specific IP for a domain without consulting DNS. This is useful for testing when DNS is not working — you manually tell curl where to connect. During failure tests we sometimes use this to bypass DNS and test TCP/TLS directly. In the main demo we do not use it — the domain resolves normally through Om's DNS.
+A: `--resolve app.team1.test:8443:10.7.11.31` tells curl to use a specific IP for a domain without consulting DNS. This is useful for testing when DNS is not working — you manually tell curl where to connect. During failure tests we sometimes use this to bypass DNS and test TCP/TLS directly. In the main demo we do not use it — the domain resolves normally through Om's DNS.
 
 ---
 
 ## Phase 2 / Full System Viva Questions — Vaidehi
 
 **Q16: What is the full request flow from your machine to Backend B?**
-A: My machine sends a DNS query to Om's Mac 1 — gets 10.7.17.151. Opens TCP to 10.7.17.151:8443. TLS handshake with nginx. Sends encrypted GET /api/status. nginx decrypts, selects Backend B via round-robin, opens TCP to 10.7.2.96:3002, sends plain HTTP GET. Backend B — on my own machine — receives the request on port 3002, returns {"backend":"B","status":"ok"} with headers. nginx receives this, encrypts the response, sends it back to me on port 8443. I receive it.
+A: My machine sends a DNS query to Om's Mac 1 — gets 10.7.11.31. Opens TCP to 10.7.11.31:8443. TLS handshake with nginx. Sends encrypted GET /api/status. nginx decrypts, selects Backend B via round-robin, opens TCP to 10.7.2.96:3002, sends plain HTTP GET. Backend B — on my own machine — receives the request on port 3002, returns {"backend":"B","status":"ok"} with headers. nginx receives this, encrypts the response, sends it back to me on port 8443. I receive it.
 
 **Q17: What is backend service isolation and why would it matter?**
-A: Service isolation means only nginx on Mac 2 can directly reach port 3002 on my machine. Currently, any machine on the LAN can curl http://10.7.2.96:3002/api/status directly — bypassing nginx, bypassing TLS, bypassing load balancing. In a real system this is a security and architecture violation. pf firewall rules would block direct access from all IPs except 10.7.17.151.
+A: Service isolation means only nginx on Mac 2 can directly reach port 3002 on my machine. Currently, any machine on the LAN can curl http://10.7.2.96:3002/api/status directly — bypassing nginx, bypassing TLS, bypassing load balancing. In a real system this is a security and architecture violation. pf firewall rules would block direct access from all IPs except 10.7.11.31.
 
 **Q18: What is DNS TTL and how does it relate to service migration?**
 A: TTL is how long a DNS answer is cached. In production, before migrating a service to a new server, engineers lower the TTL to something like 60 seconds. Then they move the service. After the change, clients pick up the new DNS answer within 60 seconds. Without lowering the TTL first, clients might cache the old record for hours and keep hitting the old server. In our demo we would show this with a 30-second TTL.
@@ -1998,7 +1998,7 @@ A: TTL is how long a DNS answer is cached. In production, before migrating a ser
 A: 502 Bad Gateway means nginx connected to the backend but the backend returned an invalid response or the connection was refused — typically because the backend process is not running. 503 Service Unavailable means nginx temporarily cannot handle the request — usually because all backends are marked as failed and in a cooldown period. Both originate from the nginx-to-backend layer but 502 is a direct connection failure and 503 is a capacity or cooldown issue.
 
 **Q20: What would you check first if a faculty member breaks the system during the demo?**
-A: I would follow the diagnostic order: DNS first. I run `dig app.team1.test +short`. If it returns 10.7.17.151, DNS is fine and I move to TCP. I run `nc -zv 10.7.17.151 8443`. If that succeeds, I move to TLS. I run `curl -sv https://app.team1.test:8443/health` and check for TLS errors. If TLS is fine, I check the application layer with `curl -s https://app.team1.test:8443/api/status` and look for 502. Each layer I check tells me whether to go deeper or investigate sideways.
+A: I would follow the diagnostic order: DNS first. I run `dig app.team1.test +short`. If it returns 10.7.11.31, DNS is fine and I move to TCP. I run `nc -zv 10.7.11.31 8443`. If that succeeds, I move to TLS. I run `curl -sv https://app.team1.test:8443/health` and check for TLS errors. If TLS is fine, I check the application layer with `curl -s https://app.team1.test:8443/api/status` and look for 502. Each layer I check tells me whether to go deeper or investigate sideways.
 
 **Q21: What is high availability and does your current setup achieve it?**
 A: High availability means the service continues operating even when individual components fail. Our setup has partial HA — if one backend fails, the other takes over, so backend failure is handled. But if nginx on Mac 2 fails, the entire service goes down — that is a single point of failure. True HA at the edge would require a standby nginx with automatic DNS failover or a virtual IP shared between two nginx instances.
@@ -2038,7 +2038,7 @@ pgrep -fl dnsmasq
 
 # Test it answers correctly
 dig app.team1.test @10.7.15.236 +short
-# Must return: 10.7.17.151
+# Must return: 10.7.11.31
 ```
 
 **Aditya — Mac 2:**
@@ -2133,7 +2133,7 @@ for i in {1..6}; do curl -s https://app.team1.test:8443/api/status; echo; done
 | Fault | Who injects | How |
 |---|---|---|
 | Stop dnsmasq | Om | `sudo killall dnsmasq` |
-| Change DNS record to wrong IP | Om | Edit dnsmasq.conf, change 10.7.17.151 to 10.7.17.99, restart |
+| Change DNS record to wrong IP | Om | Edit dnsmasq.conf, change 10.7.11.31 to 10.7.17.99, restart |
 | Stop nginx | Aditya | `brew services stop nginx` |
 | Stop Backend A | Krishiv | Ctrl+C in Backend A terminal |
 | Stop Backend B | Vaidehi | Ctrl+C in Backend B terminal |
@@ -2183,16 +2183,16 @@ ARCHITECTURE
 
 REAL IPs
   Om    Mac 1  DNS       10.7.15.236   :53/UDP
-  Aditya Mac 2  nginx     10.7.17.151   :8443/TCP (HTTPS)
+  Aditya Mac 2  nginx     10.7.11.31   :8443/TCP (HTTPS)
                                         :8080/TCP (HTTP→redirect)
-  Krishiv Mac 3  Backend A 10.7.16.201    :3001/TCP
+  Krishiv Mac 3  Backend A 10.7.28.25    :3001/TCP
   Vaidehi Mac 4  Backend B 10.7.2.96   :3002/TCP
 
-DOMAIN:   app.team1.test → 10.7.17.151
+DOMAIN:   app.team1.test → 10.7.11.31
 NETWORK:  10.7.0.0/19   GATEWAY: 10.7.0.1
 
 KEY COMMANDS (Vaidehi types these)
-  dig app.team1.test +short          → 10.7.17.151
+  dig app.team1.test +short          → 10.7.11.31
   dig app.team1.test @8.8.8.8 +short → (empty)
   curl -s  https://app.team1.test:8443/api/status
   curl -sI https://app.team1.test:8443/api/status
@@ -2218,7 +2218,7 @@ TLS HANDSHAKE (speak this order)
 
 DIAGNOSTIC ORDER (always this sequence)
   1. DNS:  dig app.team1.test +short
-  2. TCP:  nc -zv 10.7.17.151 8443
+  2. TCP:  nc -zv 10.7.11.31 8443
   3. TLS:  curl -sv https://app.team1.test:8443/health 2>&1 | grep TLS
   4. APP:  curl -s https://app.team1.test:8443/api/status
 
@@ -2255,20 +2255,20 @@ CUES
 ### Task A — Private LAN (part of 10 marks with Task B)
 - [ ] All four machine IPs confirmed on 10.7.0.0/19 subnet
 - [ ] Ping from Mac 4 to Mac 1 (10.7.15.236) succeeds
-- [ ] Ping from Mac 4 to Mac 2 (10.7.17.151) succeeds
-- [ ] Ping from Mac 4 to Mac 3 (10.7.16.201) succeeds
+- [ ] Ping from Mac 4 to Mac 2 (10.7.11.31) succeeds
+- [ ] Ping from Mac 4 to Mac 3 (10.7.28.25) succeeds
 - [ ] Topology diagram visible during Step 1
 
 ### Task B — Private DNS (part of 10 marks with Task A)
 - [ ] dnsmasq running on Mac 1
-- [ ] `dig app.team1.test +short` returns 10.7.17.151 from Mac 4
+- [ ] `dig app.team1.test +short` returns 10.7.11.31 from Mac 4
 - [ ] `dig app.team1.test @8.8.8.8 +short` returns nothing (proves private DNS)
 - [ ] Client DNS configured to use 10.7.15.236 (`networksetup -getdnsservers Wi-Fi`)
 - [ ] .test namespace explained (not .local, not .com)
 - [ ] DNS vs TCP connection difference explained
 
 ### Task C + D — Backends + Reverse Proxy + Load Balancing (10 marks)
-- [ ] `curl -s http://10.7.16.201:3001/api/status` returns {"backend":"A","status":"ok"}
+- [ ] `curl -s http://10.7.28.25:3001/api/status` returns {"backend":"A","status":"ok"}
 - [ ] `curl -s http://10.7.2.96:3002/api/status` returns {"backend":"B","status":"ok"}
 - [ ] `curl -sI https://app.team1.test:8443/api/status` shows Server: nginx
 - [ ] X-Backend: A observed in at least one response
@@ -2296,7 +2296,7 @@ CUES
 ### Task G — Wireshark Packet Evidence (7 marks)
 - [ ] Wireshark pcap loaded: evidence/script7/pcap/script7_capture.pcapng
 - [ ] DNS query packet identified: source → 10.7.15.236:53
-- [ ] DNS response packet identified: answer app.team1.test → 10.7.17.151
+- [ ] DNS response packet identified: answer app.team1.test → 10.7.11.31
 - [ ] TCP SYN packet identified with destination port 8443
 - [ ] TCP SYN-ACK packet identified
 - [ ] TCP ACK packet identified
@@ -2356,7 +2356,7 @@ brew services list | grep nginx | grep started || echo "START NGINX NOW"
 curl -sk https://127.0.0.1:8443/health | grep ok || echo "NGINX NOT RESPONDING"
 
 # Mac 3 — Krishiv
-curl -s http://10.7.16.201:3001/api/status | grep backend || echo "START BACKEND A NOW"
+curl -s http://10.7.28.25:3001/api/status | grep backend || echo "START BACKEND A NOW"
 
 # Mac 4 — Vaidehi
 curl -s https://app.team1.test:8443/api/status | grep backend || echo "END TO END BROKEN"

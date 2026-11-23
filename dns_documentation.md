@@ -61,7 +61,7 @@ nslookup app.team1.test 10.7.15.236
 
 ## 4. Explanation: DNS vs TCP/HTTPS and DNS Ports
 
-*   **DNS (Domain Name System)** operates primarily over **UDP port 53** (though it can use TCP port 53 for large responses). Its sole responsibility is to translate human-readable domain names (like `app.team1.test`) into IP addresses (like `10.7.17.151`).
+*   **DNS (Domain Name System)** operates primarily over **UDP port 53** (though it can use TCP port 53 for large responses). Its sole responsibility is to translate human-readable domain names (like `app.team1.test`) into IP addresses (like `10.7.11.31`).
 *   **TCP (Transmission Control Protocol)** is the underlying reliable transport protocol used by HTTP/HTTPS. Once DNS provides the IP address, the client establishes a TCP connection (the 3-way handshake: SYN, SYN-ACK, ACK) to that IP.
 *   **HTTPS (HTTP Secure)** operates over **TCP port 443** (or in our edge case, potentially `8443`). It builds on top of TCP by initiating a TLS (Transport Layer Security) handshake to encrypt the application payload.
-*   **The Flow**: The client first queries DNS (UDP 53) to find out *where* `app.team1.test` is. DNS answers `10.7.17.151`. The client then sends a TCP SYN to `10.7.17.151` on port 443 to start the HTTPS connection. The DNS server is never involved in the HTTP/HTTPS traffic itself; it merely acts as the directory service.
+*   **The Flow**: The client first queries DNS (UDP 53) to find out *where* `app.team1.test` is. DNS answers `10.7.11.31`. The client then sends a TCP SYN to `10.7.11.31` on port 443 to start the HTTPS connection. The DNS server is never involved in the HTTP/HTTPS traffic itself; it merely acts as the directory service.

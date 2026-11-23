@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
 # =============================================================================
 # verify_lan.sh — Script 0 Pairwise LAN Reachability Check
-# Machine: Mac 2 (P2) | IP: 10.7.17.151
+# Machine: Mac 2 (P2) | IP: 10.7.11.31
 # Usage:   ./scripts/verify_lan.sh <P1_IP> <P3_IP> <P4_IP>
 # Example: ./scripts/verify_lan.sh 10.7.5.20 10.7.8.45 10.7.12.99
 # =============================================================================
@@ -39,7 +39,7 @@ fi
 P1_IP="$1"
 P3_IP="$2"
 P4_IP="$3"
-MAC2_IP="10.7.17.151"
+MAC2_IP="10.7.11.31"
 SUBNET="10.7.0.0/19"
 GATEWAY="10.7.0.1"
 
