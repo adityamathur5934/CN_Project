@@ -27,28 +27,29 @@
 | Phase 2 doc created | ✅ | `docs/phase2.md` |
 | Live test evidence saved | ✅ | `evidence/phase2/live_test_results.md` |
 
+| **pf rules ACTIVATED** | ✅ | `pf_setup.sh` run on 24 Nov 2026 00:30:05 IST; pf status: Enabled |
+| Loopback post-activation check | ✅ | `curl http://127.0.0.1:3002/api/status` → `{"backend":"B","status":"ok"}` |
+| Anchor loaded and verified | ✅ | `pfctl -a com.cn-project.backend-b-isolation -s rules` shows all 3 rules active |
+
 ---
 
-## Pending: Activation + Team Tests
+## Active pf Anchor Rules (as of activation)
 
-The pf rules are **authored but not yet activated** (requires `sudo`). After confirming `MAC2_IP=10.7.11.31` with Aditya:
-
-```bash
-# Step 1 — Apply the firewall rules
-sudo bash /Users/vaidehisahu/CN/evidence/phase2/pf_setup.sh
-
-# Step 2 — Proof Point A: ask Aditya to run from Mac 2
-curl http://10.7.2.96:3002/api/status
-# Expected: HTTP 200, X-Backend: B
-
-# Step 3 — Proof Point B: ask Om or Krishiv to run from Mac 1 or Mac 3
-curl --connect-timeout 5 http://10.7.2.96:3002/
-# Expected: Connection refused or timeout
-
-# Step 4 — Proof Point C: HTTPS end-to-end (can run from any Mac)
-curl --cacert /path/to/team1.test.crt https://app.team1.test:8443/api/status
-# Expected: HTTP 200, TLS valid, X-Backend: A or B
 ```
+pass in quick on lo0 inet proto tcp from any to 127.0.0.1 port = 3002 flags S/SA keep state
+pass in quick on en0 inet proto tcp from 10.7.11.31 to any port = 3002 flags S/SA keep state
+block drop in quick on en0 proto tcp from any to any port = 3002
+```
+
+---
+
+## Remaining Team Tests (coordinate with teammates)
+
+| Test | Who runs it | Command | Expected |
+|------|-------------|---------|----------|
+| A: Mac 2 → port 3002 direct | **Aditya (Mac 2)** | `curl http://10.7.2.96:3002/api/status` | HTTP 200, X-Backend: B |
+| B: Unauthorized host blocked | **Om (Mac 1) or Krishiv (Mac 3)** | `curl --connect-timeout 5 http://10.7.2.96:3002/` | Connection refused / timeout |
+| C: HTTPS end-to-end | Anyone | `curl --cacert team1.test.crt https://app.team1.test:8443/api/status` | HTTP 200, TLS valid |
 
 Rollback at any time:
 ```bash
@@ -59,4 +60,4 @@ sudo bash /Users/vaidehisahu/CN/evidence/phase2/pf_rollback.sh
 
 ## Git
 Branch: `p4-backend-b`
-Committed: `2ce4510` (workflow) + live test results (pending commit)
+Commits: `2ce4510` (rules authored), `2a7f262` (live tests), activation commit pending
