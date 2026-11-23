@@ -1,0 +1,28 @@
+=== EXTENSION D — PHASE 2 BACKEND HA FAILOVER ===
+Date: Tue Nov 24 00:45:48 IST 2026
+
+--- STEP 1: BASELINE (both backends running) ---
+Request 1: {"backend": "B", "status": "ok"}
+Request 2: {"backend": "B", "status": "ok"}
+Request 3: {"backend": "B", "status": "ok"}
+Request 4: {"backend": "B", "status": "ok"}
+
+--- STEP 2: FAILOVER (Backend A stopped) ---
+Request 1: {"backend": "B", "status": "ok"}
+Request 2: {"backend": "B", "status": "ok"}
+Request 3: {"backend": "B", "status": "ok"}
+Request 4: {"backend": "B", "status": "ok"}
+Request 5: {"backend": "B", "status": "ok"}
+Request 6: {"backend": "B", "status": "ok"}
+
+RESULT: All requests served by Backend B — failover working
+
+--- STEP 3: RECOVERY (Backend A restarted) ---
+Request 1: {"backend": "B", "status": "ok"}
+Request 2: {"backend": "A", "status": "ok"}
+Request 3: {"backend": "B", "status": "ok"}
+Request 4: {"backend": "A", "status": "ok"}
+Request 5: {"backend": "B", "status": "ok"}
+Request 6: {"backend": "A", "status": "ok"}
+
+RESULT: Round-robin A/B resumed — full recovery confirmed
