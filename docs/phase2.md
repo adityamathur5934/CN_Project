@@ -40,8 +40,21 @@ from the backup created by `pf_setup.sh`.
 | `evidence/phase2/verification_plan.md` | Exact test commands |
 | `evidence/phase2/completion_record.md` | Completion table |
 
-## Verification
+## Live Tests (Pre-Activation)
+
+Tested from Mac 4 before pf rules were activated — see `evidence/phase2/live_test_results.md`.
+
+| Test | Result |
+|------|--------|
+| Backend B loopback (`127.0.0.1:3002`) | ✅ HTTP 200, X-Backend: B |
+| ETag `"backend-b-v1"` / 304 Not Modified | ✅ Confirmed |
+| HTTPS `app.team1.test:8443` via nginx | ✅ TLSv1.3, cert validated, HTTP 200 |
+| Round-robin (6 requests) | ✅ Alternating A/B, Cache-Control: max-age=60 on all |
+| Mac 2 ping from Mac 4 | ✅ 0% packet loss, MAC2_IP=10.7.11.31 confirmed |
+
+## Verification After Activation
+
 See `evidence/phase2/verification_plan.md` for exact commands proving:
-- (A) Mac 2 can reach port 3002
-- (B) Other hosts are blocked
+- (A) Mac 2 (`10.7.11.31`) can reach port 3002 — run by Aditya
+- (B) Unauthorized host (Mac 1 or Mac 3) is blocked on port 3002 — run by Om or Krishiv
 - (C) `https://app.team1.test:8443` HTTPS still works end-to-end

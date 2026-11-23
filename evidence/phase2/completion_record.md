@@ -2,36 +2,61 @@
 
 ## Phase 2 — Backend B Service Isolation (Mac 4)
 
-| Item | Status | Notes |
-|------|--------|-------|
-| Backend B confirmed on TCP 3002 | ✅ | Listen address confirmed via lsof/netstat |
-| Audit before-state captured | ✅ | `/evidence/phase2/audit_before.md` |
-| pf anchor rules authored | ✅ | `/evidence/phase2/pf_anchor.conf` |
-| pf_setup.sh written and executable | ✅ | `/evidence/phase2/pf_setup.sh` |
-| pf_rollback.sh written and executable | ✅ | `/evidence/phase2/pf_rollback.sh` |
-| Verification plan written | ✅ | `/evidence/phase2/verification_plan.md` |
-| Loopback (127.0.0.1) preserved | ✅ | `pass in quick on lo0` rule |
-| Mac 2 (nginx) allowed on port 3002 | ✅ | `pass in quick on en0 from 10.7.11.31` |
-| All other hosts blocked on port 3002 | ✅ | `block in quick on en0` |
-| SSH / management traffic unaffected | ✅ | Rules are port-3002-specific only |
+| Item | Status | Evidence / Notes |
+|------|--------|-----------------|
+| Phase 1 baseline verified | ✅ | Backend B on TCP 3002, nginx on Mac 2, HTTPS on 8443 — all confirmed |
+| Backend B confirmed on TCP 3002 | ✅ | `lsof -iTCP:3002`: Python PID 20356, binds `0.0.0.0:3002` |
+| Backend B responds correctly | ✅ | `GET /api/status` → HTTP 200, `X-Backend: B`, `Cache-Control: max-age=60` |
+| ETag / 304 verified | ✅ | `If-None-Match: "backend-b-v1"` → HTTP 304 from Backend B directly |
+| Round-robin confirmed | ✅ | 6 requests → alternating A/B; see `live_test_results.md` |
+| HTTPS end-to-end verified | ✅ | TLSv1.3, cert CN=app.team1.test matched, no `-k`; see `live_test_results.md` |
+| Audit before-state captured | ✅ | `evidence/phase2/audit_before.md` — pf disabled, port 3002 unrestricted |
+| pf anchor rules authored | ✅ | `evidence/phase2/pf_anchor.conf` |
+| pf_setup.sh written and executable | ✅ | `evidence/phase2/pf_setup.sh` — idempotent, backs up /etc/pf.conf |
+| pf_rollback.sh written and executable | ✅ | `evidence/phase2/pf_rollback.sh` — flushes anchor, restores backup |
+| Loopback (127.0.0.1) preserved in rules | ✅ | `pass in quick on lo0 proto tcp to 127.0.0.1 port 3002` |
+| Mac 2 (nginx) allowed on port 3002 | ✅ | `pass in quick on en0 proto tcp from 10.7.11.31 to any port 3002` |
+| All other hosts blocked on port 3002 | ✅ | `block in quick on en0 proto tcp to any port 3002` |
+| SSH / management access unaffected | ✅ | Rules are port-3002-specific only |
 | Outbound traffic from Mac 4 unaffected | ✅ | Only inbound rules added |
 | Backend A (Mac 3, port 3001) unaffected | ✅ | Rules only target Mac 4's port 3002 |
-| Rules reversible | ✅ | `pf_rollback.sh` restores original pf.conf |
-| MAC2_IP variable used in setup script | ✅ | Confirmed `10.7.11.31`; verify with Aditya |
-| Secrets not committed | ✅ | Only IPs and rules; no credentials |
-| Existing config files not deleted | ✅ | /etc/pf.conf backed up before modification |
-| README / docs updated | ✅ | `/docs/phase2.md` created |
+| Rules reversible | ✅ | `pf_rollback.sh` restores original `/etc/pf.conf` from backup |
+| MAC2_IP confirmed | ✅ | `10.7.11.31` per `CN_PROJECT_LIVE_CONFIG.md`; ping from Mac 4 confirms reachable |
+| Secrets not committed | ✅ | Only IPs and rules — no credentials |
+| Existing config files not deleted | ✅ | `/etc/pf.conf` backed up before modification |
+| Phase 2 doc created | ✅ | `docs/phase2.md` |
+| Live test evidence saved | ✅ | `evidence/phase2/live_test_results.md` |
 
-## Pending: Activation
+---
 
-The pf rules have been **authored but not yet activated**.
-Activation requires:
-1. Confirm `MAC2_IP=10.7.11.31` with Aditya
-2. Run: `sudo bash /Users/vaidehisahu/CN/evidence/phase2/pf_setup.sh`
-3. Run verification tests from `verification_plan.md`
+## Pending: Activation + Team Tests
 
-## Git branch
-`p4-backend-b` (HEAD `70cebae4506fa9a6fc0290496bad05aa8cfb047b`)
+The pf rules are **authored but not yet activated** (requires `sudo`). After confirming `MAC2_IP=10.7.11.31` with Aditya:
 
-## Completed by
-Mac 4 — Vaidehi — wf-coder agent
+```bash
+# Step 1 — Apply the firewall rules
+sudo bash /Users/vaidehisahu/CN/evidence/phase2/pf_setup.sh
+
+# Step 2 — Proof Point A: ask Aditya to run from Mac 2
+curl http://10.7.2.96:3002/api/status
+# Expected: HTTP 200, X-Backend: B
+
+# Step 3 — Proof Point B: ask Om or Krishiv to run from Mac 1 or Mac 3
+curl --connect-timeout 5 http://10.7.2.96:3002/
+# Expected: Connection refused or timeout
+
+# Step 4 — Proof Point C: HTTPS end-to-end (can run from any Mac)
+curl --cacert /path/to/team1.test.crt https://app.team1.test:8443/api/status
+# Expected: HTTP 200, TLS valid, X-Backend: A or B
+```
+
+Rollback at any time:
+```bash
+sudo bash /Users/vaidehisahu/CN/evidence/phase2/pf_rollback.sh
+```
+
+---
+
+## Git
+Branch: `p4-backend-b`
+Committed: `2ce4510` (workflow) + live test results (pending commit)
